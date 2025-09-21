@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBIR Grant Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-8">
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold text-center text-gray-700">SBIR Grant Management Dashboard</h1>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left Column: Dashboard -->
+            <div class="space-y-8">
+                <!-- Budget Overview -->
+                <section class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Budget Overview</h2>
+                    <canvas id="budgetChart"></canvas>
+                </section>
+
+                <!-- Upcoming Deadlines -->
+                <section class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Upcoming Deadlines</h2>
+                    <ul id="deadlinesList" class="list-disc list-inside space-y-2">
+                        <!-- Deadlines will be populated by JavaScript -->
+                    </ul>
+                </section>
+            </div>
+
+            <!-- Right Column: Reporting and Chatbot -->
+            <div class="space-y-8">
+                <!-- AI Reporting Assistant -->
+                <section class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">AI Reporting Assistant</h2>
+                    <textarea id="reportInput" class="w-full h-40 p-2 border rounded-md" placeholder="Enter your accomplishments and data for the reporting period..."></textarea>
+                    <button id="generateReportBtn" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                        Generate Report Draft
+                    </button>
+                    <div id="reportOutput" class="mt-4 p-4 bg-gray-50 rounded-md border hidden">
+                        <!-- Generated report will appear here -->
+                    </div>
+                </section>
+
+                <!-- Compliance Chatbot -->
+                <section class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Compliance Chatbot</h2>
+                    <div id="chatHistory" class="h-64 border rounded-md p-4 overflow-y-auto bg-gray-50 mb-4">
+                        <!-- Chat messages will appear here -->
+                    </div>
+                    <div class="flex">
+                        <input type="text" id="chatInput" class="flex-grow p-2 border rounded-l-md" placeholder="Ask a question about SBIR rules...">
+                        <button id="chatSendBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-r-md">
+                            Send
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // JavaScript logic will be added in subsequent steps.
+        // This script block is for initialization and feature implementation.
+
+        // --- Dashboard Functionality ---
+        function setupDashboard() {
+            // 1. Implement Chart.js for budget overview
+            const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+            new Chart(budgetCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Spent', 'Remaining'],
+                    datasets: [{
+                        label: 'Budget',
+                        data: [75000, 25000], // Sample data: $75k spent, $25k remaining
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Total Budget: $100,000'
+                        }
+                    }
+                }
+            });
+
+            // 2. Populate upcoming deadlines
+            const deadlinesList = document.getElementById('deadlinesList');
+            const deadlines = [
+                { name: 'Quarterly Report - Q3', date: '2024-09-30' },
+                { name: 'Final Project Report', date: '2024-12-31' },
+                { name: 'Invention Disclosure Report', date: '2025-01-15' }
+            ];
+
+            deadlines.forEach(deadline => {
+                const li = document.createElement('li');
+                li.textContent = `${deadline.name} (Due: ${deadline.date})`;
+                deadlinesList.appendChild(li);
+            });
+        }
+
+        // --- Reporting Assistant Functionality ---
+        function setupReportingAssistant() {
+            const generateReportBtn = document.getElementById('generateReportBtn');
+            const reportInput = document.getElementById('reportInput');
+            const reportOutput = document.getElementById('reportOutput');
+
+            generateReportBtn.addEventListener('click', () => {
+                const accomplishments = reportInput.value.trim();
+
+                if (accomplishments === "") {
+                    reportOutput.innerHTML = `<p class="text-red-500">Please enter your accomplishments before generating a report.</p>`;
+                    reportOutput.classList.remove('hidden');
+                    return;
+                }
+
+                // Simulate AI-generated report
+                const reportDraft = `
+                    <h3 class="text-xl font-semibold mb-2">Quarterly Report Draft</h3>
+                    <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                    <p><strong>Prepared For:</strong> SBIR Program Office</p>
+                    <hr class="my-2">
+                    <p><strong>Summary of Accomplishments:</p>
+                    <p class="mt-2 pl-4 border-l-4 border-gray-300">${accomplishments}</p>
+                    <p class="mt-4 text-sm text-gray-600"><em>This is a simulated AI-generated draft. Please review and edit as needed before submission.</em></p>
+                `;
+
+                reportOutput.innerHTML = reportDraft;
+                reportOutput.classList.remove('hidden');
+            });
+        }
+
+        // --- Compliance Chatbot Functionality ---
+        function setupChatbot() {
+            const chatSendBtn = document.getElementById('chatSendBtn');
+            const chatInput = document.getElementById('chatInput');
+            const chatHistory = document.getElementById('chatHistory');
+
+            const botResponses = {
+                "allowable costs": "Allowable costs for SBIR grants typically include direct labor, materials, and a portion of indirect costs (F&A). All expenses must be directly related to the project. Refer to the official SBIR guidelines for a detailed list.",
+                "reporting frequency": "Most SBIR programs require quarterly progress reports and a final report at the end of the project period. Some may have additional reporting requirements, so check your grant agreement.",
+                "no-cost extension": "A no-cost extension (NCE) allows you to extend the project period without additional funding. You typically need to request this from the funding agency before your original project end date, providing a justification for the extension.",
+                "default": "I can answer questions about allowable costs, reporting frequency, and no-cost extensions. Please try one of those topics. For other questions, please consult the official SBIR documentation."
+            };
+
+            const getBotResponse = (userInput) => {
+                const lowerInput = userInput.toLowerCase();
+                if (lowerInput.includes("cost")) {
+                    return botResponses["allowable costs"];
+                } else if (lowerInput.includes("report")) {
+                    return botResponses["reporting frequency"];
+                } else if (lowerInput.includes("extension")) {
+                    return botResponses["no-cost extension"];
+                } else {
+                    return botResponses["default"];
+                }
+            };
+
+            const handleSendMessage = () => {
+                const userInput = chatInput.value.trim();
+                if (userInput === "") return;
+
+                // Display user message
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'text-right mb-2';
+                userMessageDiv.innerHTML = `<span class="bg-blue-500 text-white p-2 rounded-lg inline-block">${userInput}</span>`;
+                chatHistory.appendChild(userMessageDiv);
+
+                // Get and display bot response
+                const botResponse = getBotResponse(userInput);
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.className = 'text-left mb-2';
+                botMessageDiv.innerHTML = `<span class="bg-gray-300 text-gray-800 p-2 rounded-lg inline-block">${botResponse}</span>`;
+
+                // Simulate bot thinking
+                setTimeout(() => {
+                    chatHistory.appendChild(botMessageDiv);
+                    chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
+                }, 500);
+
+                chatInput.value = "";
+                chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
+            };
+
+            chatSendBtn.addEventListener('click', handleSendMessage);
+            chatInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    handleSendMessage();
+                }
+            });
+        }
+
+        // Initialize all features when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            setupDashboard();
+            setupReportingAssistant();
+            setupChatbot();
+        });
+    </script>
+
+</body>
+</html>
