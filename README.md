@@ -29,3 +29,4 @@ The application includes the following features:
 To run this project, you will need a modern web browser and an internet connection. The application is designed to be a single-file web app, so you can simply open the `sbir_agent.html` file in your browser.
 
 **Note**: To use the AI-powered features, you will need to provide your own Gemini API key. The application will prompt you for the key when needed.
+
