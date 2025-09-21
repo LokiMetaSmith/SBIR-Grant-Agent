@@ -64,8 +64,14 @@
     </div>
 
     <script>
-        // JavaScript logic will be added in subsequent steps.
-        // This script block is for initialization and feature implementation.
+        // --- LLM Chatbot Configuration ---
+        // IMPORTANT: Replace these values with your LLM API details.
+        // For local models (e.g., Ollama, LM Studio), you might not need an API key.
+        // WARNING: Do not expose your API key in client-side code in a production environment.
+        // This method is for prototyping and local use only.
+        const LLM_API_ENDPOINT = 'http://localhost:11434/v1/chat/completions'; // Example for Ollama
+        const LLM_API_KEY = 'ollama'; // Example for Ollama, can be any string
+        const LLM_MODEL = 'llama3'; // Example for Ollama
 
         // --- Dashboard Functionality ---
         function setupDashboard() {
@@ -149,56 +155,77 @@
             });
         }
 
-        // --- Compliance Chatbot Functionality ---
+        // --- Compliance Chatbot Functionality (LLM-Powered) ---
         function setupChatbot() {
             const chatSendBtn = document.getElementById('chatSendBtn');
             const chatInput = document.getElementById('chatInput');
             const chatHistory = document.getElementById('chatHistory');
 
-            const botResponses = {
-                "allowable costs": "Allowable costs for SBIR grants typically include direct labor, materials, and a portion of indirect costs (F&A). All expenses must be directly related to the project. Refer to the official SBIR guidelines for a detailed list.",
-                "reporting frequency": "Most SBIR programs require quarterly progress reports and a final report at the end of the project period. Some may have additional reporting requirements, so check your grant agreement.",
-                "no-cost extension": "A no-cost extension (NCE) allows you to extend the project period without additional funding. You typically need to request this from the funding agency before your original project end date, providing a justification for the extension.",
-                "default": "I can answer questions about allowable costs, reporting frequency, and no-cost extensions. Please try one of those topics. For other questions, please consult the official SBIR documentation."
+            const conversationHistory = [{
+                role: 'system',
+                content: 'You are an expert assistant for U.S. Small Business Innovation Research (SBIR) grants. Your goal is to provide accurate, helpful, and concise information about SBIR program rules, compliance, reporting, and management. Answer questions directly related to these topics. If a question is outside this scope, politely state that you can only answer questions about SBIR grants.'
+            }];
+
+            const displayMessage = (role, content) => {
+                const messageDiv = document.createElement('div');
+                const messageClass = role === 'user' ? 'text-right' : 'text-left';
+                const bubbleClass = role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-800';
+                messageDiv.className = `${messageClass} mb-2`;
+                messageDiv.innerHTML = `<span class="${bubbleClass} p-2 rounded-lg inline-block">${content}</span>`;
+                chatHistory.appendChild(messageDiv);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
             };
 
-            const getBotResponse = (userInput) => {
-                const lowerInput = userInput.toLowerCase();
-                if (lowerInput.includes("cost")) {
-                    return botResponses["allowable costs"];
-                } else if (lowerInput.includes("report")) {
-                    return botResponses["reporting frequency"];
-                } else if (lowerInput.includes("extension")) {
-                    return botResponses["no-cost extension"];
-                } else {
-                    return botResponses["default"];
-                }
-            };
-
-            const handleSendMessage = () => {
+            const handleSendMessage = async () => {
                 const userInput = chatInput.value.trim();
                 if (userInput === "") return;
 
-                // Display user message
-                const userMessageDiv = document.createElement('div');
-                userMessageDiv.className = 'text-right mb-2';
-                userMessageDiv.innerHTML = `<span class="bg-blue-500 text-white p-2 rounded-lg inline-block">${userInput}</span>`;
-                chatHistory.appendChild(userMessageDiv);
-
-                // Get and display bot response
-                const botResponse = getBotResponse(userInput);
-                const botMessageDiv = document.createElement('div');
-                botMessageDiv.className = 'text-left mb-2';
-                botMessageDiv.innerHTML = `<span class="bg-gray-300 text-gray-800 p-2 rounded-lg inline-block">${botResponse}</span>`;
-
-                // Simulate bot thinking
-                setTimeout(() => {
-                    chatHistory.appendChild(botMessageDiv);
-                    chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
-                }, 500);
-
+                displayMessage('user', userInput);
+                conversationHistory.push({ role: 'user', content: userInput });
                 chatInput.value = "";
-                chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
+
+                // Show thinking indicator
+                const thinkingDiv = document.createElement('div');
+                thinkingDiv.className = 'text-left mb-2';
+                thinkingDiv.id = 'thinking-indicator';
+                thinkingDiv.innerHTML = `<span class="bg-gray-300 text-gray-800 p-2 rounded-lg inline-block">...</span>`;
+                chatHistory.appendChild(thinkingDiv);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+
+                try {
+                    const response = await fetch(LLM_API_ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${LLM_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            model: LLM_MODEL,
+                            messages: conversationHistory
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ message: 'No error details available.' }));
+                        throw new Error(`API request failed with status ${response.status}: ${errorData.error ? errorData.error.message : response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    const botResponse = data.choices[0].message.content;
+
+                    conversationHistory.push({ role: 'assistant', content: botResponse });
+                    displayMessage('assistant', botResponse);
+
+                } catch (error) {
+                    console.error("Error calling LLM API:", error);
+                    displayMessage('assistant', `Sorry, I encountered an error. Please check the console and your API configuration. Error: ${error.message}`);
+                } finally {
+                    // Remove thinking indicator
+                    const indicator = document.getElementById('thinking-indicator');
+                    if (indicator) {
+                        indicator.remove();
+                    }
+                }
             };
 
             chatSendBtn.addEventListener('click', handleSendMessage);
