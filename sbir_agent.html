@@ -36,7 +36,12 @@
             <div class="space-y-8">
                 <!-- AI Reporting Assistant -->
                 <section class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4">AI Reporting Assistant</h2>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-semibold">AI Reporting Assistant</h2>
+                        <button id="saveReportBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1 px-3 rounded text-sm">
+                            Save
+                        </button>
+                    </div>
                     <textarea id="reportInput" class="w-full h-40 p-2 border rounded-md" placeholder="Enter your accomplishments and data for the reporting period..."></textarea>
                     <button id="generateReportBtn" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
                         Generate Report Draft
@@ -64,16 +69,58 @@
     </div>
 
     <script>
-        // --- Backend and LLM Configuration ---
-        // The frontend now communicates with the local Python server, which securely handles the LLM API calls.
-        const APP_API_ENDPOINT = '/api/chat';
-        // Note: The specific LLM model is now passed in the body of the request.
-        const CHATBOT_LLM_MODEL = 'llama3'; // Or any other model your backend is configured to use.
-        const REPORTING_LLM_MODEL = 'llama3'; // You can use a different model for reporting if desired.
+        // --- Global State and Configuration ---
+        const DATA_API_ENDPOINT = '/api/data';
+        const CHAT_API_ENDPOINT = '/api/chat';
+        const CHATBOT_LLM_MODEL = 'llama3';
+        const REPORTING_LLM_MODEL = 'llama3';
 
-        // --- Dashboard Functionality ---
-        function setupDashboard() {
-            // 1. Implement Chart.js for budget overview
+        let appState = {
+            budget: { spent: 0, remaining: 100000 },
+            deadlines: [],
+            reportText: "",
+            chatHistory: []
+        };
+
+        // --- Core Functions ---
+
+        async function loadApplicationData() {
+            try {
+                const response = await fetch(DATA_API_ENDPOINT);
+                if (!response.ok) throw new Error('Failed to load data from server.');
+                appState = await response.json();
+                console.log('Application data loaded:', appState);
+            } catch (error) {
+                console.error('Could not load application data:', error);
+                // On failure, the default appState will be used.
+            }
+        }
+
+        async function saveApplicationData() {
+            // Update appState with the latest from the UI before saving
+            const reportInput = document.getElementById('reportInput');
+            appState.reportText = reportInput.value;
+            // Chat history is updated directly in the chatbot logic.
+            // Budget and deadlines are not yet editable.
+
+            try {
+                const response = await fetch(DATA_API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(appState)
+                });
+                if (!response.ok) throw new Error('Failed to save data to server.');
+                console.log('Application data saved.');
+                // Optionally, show a success indicator to the user
+            } catch (error) {
+                console.error('Could not save application data:', error);
+                // Optionally, show a failure indicator to the user
+            }
+        }
+
+        // --- UI Setup Functions ---
+
+        function setupDashboard(budget, deadlines) {
             const budgetCtx = document.getElementById('budgetChart').getContext('2d');
             new Chart(budgetCtx, {
                 type: 'doughnut',
@@ -81,40 +128,23 @@
                     labels: ['Spent', 'Remaining'],
                     datasets: [{
                         label: 'Budget',
-                        data: [75000, 25000], // Sample data: $75k spent, $25k remaining
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.8)',
-                            'rgba(54, 162, 235, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)'
-                        ],
+                        data: [budget.spent, budget.remaining],
+                        backgroundColor: ['rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)'],
+                        borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
                         borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Total Budget: $100,000'
-                        }
+                        legend: { position: 'top' },
+                        title: { display: true, text: `Total Budget: $${budget.spent + budget.remaining}` }
                     }
                 }
             });
 
-            // 2. Populate upcoming deadlines
             const deadlinesList = document.getElementById('deadlinesList');
-            const deadlines = [
-                { name: 'Quarterly Report - Q3', date: '2024-09-30' },
-                { name: 'Final Project Report', date: '2024-12-31' },
-                { name: 'Invention Disclosure Report', date: '2025-01-15' }
-            ];
-
+            deadlinesList.innerHTML = ''; // Clear existing
             deadlines.forEach(deadline => {
                 const li = document.createElement('li');
                 li.textContent = `${deadline.name} (Due: ${deadline.date})`;
@@ -122,81 +152,69 @@
             });
         }
 
-        // --- Reporting Assistant Functionality (LLM-Powered via Backend) ---
-        function setupReportingAssistant() {
+        function setupReportingAssistant(initialText) {
             const generateReportBtn = document.getElementById('generateReportBtn');
             const reportInput = document.getElementById('reportInput');
             const reportOutput = document.getElementById('reportOutput');
+            const saveReportBtn = document.getElementById('saveReportBtn');
+
+            reportInput.value = initialText;
+            saveReportBtn.addEventListener('click', saveApplicationData);
 
             generateReportBtn.addEventListener('click', async () => {
                 const accomplishments = reportInput.value.trim();
-
                 if (accomplishments === "") {
-                    reportOutput.innerHTML = `<p class="text-red-500">Please enter your accomplishments before generating a report.</p>`;
+                    reportOutput.innerHTML = `<p class="text-red-500">Please enter your accomplishments.</p>`;
                     reportOutput.classList.remove('hidden');
                     return;
                 }
-
-                // Show loading state
                 reportOutput.innerHTML = `<p class="text-gray-500">Generating draft...</p>`;
                 reportOutput.classList.remove('hidden');
 
                 const systemPrompt = `You are an AI assistant specialized in generating sections for U.S. Small Business Innovation Research (SBIR) grant reports. Your task is to take the user's raw notes and accomplishments and format them into a professional, well-structured report section. The tone should be formal and objective. Focus on clearly presenting the technical progress and outcomes.`;
-
-                const messages = [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: accomplishments }
-                ];
+                const messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: accomplishments }];
 
                 try {
-                    const response = await fetch(APP_API_ENDPOINT, {
+                    const response = await fetch(CHAT_API_ENDPOINT, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: REPORTING_LLM_MODEL,
-                            messages: messages
-                        })
+                        body: JSON.stringify({ model: REPORTING_LLM_MODEL, messages: messages })
                     });
-
                     const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.error || `API request failed with status ${response.status}`);
-                    }
-
-                    const reportDraft = data.choices[0].message.content;
-
-                    // Sanitize the output slightly to avoid LLMs adding markdown to the whole block
-                    const formattedReport = reportDraft.replace(/```html/g, '').replace(/```/g, '');
-                    reportOutput.innerHTML = formattedReport;
-
+                    if (!response.ok) throw new Error(data.error || `API request failed`);
+                    reportOutput.innerHTML = data.choices[0].message.content.replace(/```html/g, '').replace(/```/g, '');
                 } catch (error) {
-                    console.error("Error calling backend for reporting:", error);
-                    reportOutput.innerHTML = `<p class="text-red-500">Sorry, I encountered an error while generating the report. Error: ${error.message}</p>`;
+                    reportOutput.innerHTML = `<p class="text-red-500">Sorry, I encountered an error. Error: ${error.message}</p>`;
                 }
             });
         }
 
-        // --- Compliance Chatbot Functionality (LLM-Powered via Backend) ---
-        function setupChatbot() {
+        function setupChatbot(initialHistory) {
             const chatSendBtn = document.getElementById('chatSendBtn');
             const chatInput = document.getElementById('chatInput');
-            const chatHistory = document.getElementById('chatHistory');
+            const chatHistoryEl = document.getElementById('chatHistory');
 
-            const conversationHistory = [{
-                role: 'system',
-                content: 'You are an expert assistant for U.S. Small Business Innovation Research (SBIR) grants. Your goal is to provide accurate, helpful, and concise information about SBIR program rules, compliance, reporting, and management. Answer questions directly related to these topics. If a question is outside this scope, politely state that you can only answer questions about SBIR grants.'
-            }];
+            appState.chatHistory = initialHistory;
+            // The system prompt is always the first message, but not displayed.
+            const conversationHistory = [ ...appState.chatHistory ];
+            if (conversationHistory.length === 0 || conversationHistory[0].role !== 'system') {
+                conversationHistory.unshift({
+                    role: 'system',
+                    content: 'You are an expert assistant for U.S. Small Business Innovation Research (SBIR) grants. Your goal is to provide accurate, helpful, and concise information about SBIR program rules, compliance, reporting, and management. Answer questions directly related to these topics. If a question is outside this scope, politely state that you can only answer questions about SBIR grants.'
+                });
+            }
 
             const displayMessage = (role, content) => {
+                if (role === 'system') return; // Do not display system messages
                 const messageDiv = document.createElement('div');
-                const messageClass = role === 'user' ? 'text-right' : 'text-left';
-                const bubbleClass = role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-800';
-                messageDiv.className = `${messageClass} mb-2`;
-                messageDiv.innerHTML = `<span class="${bubbleClass} p-2 rounded-lg inline-block">${content}</span>`;
-                chatHistory.appendChild(messageDiv);
-                chatHistory.scrollTop = chatHistory.scrollHeight;
+                messageDiv.className = `${role === 'user' ? 'text-right' : 'text-left'} mb-2`;
+                messageDiv.innerHTML = `<span class="${role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-800'} p-2 rounded-lg inline-block">${content}</span>`;
+                chatHistoryEl.appendChild(messageDiv);
+                chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
             };
+
+            // Load initial history
+            conversationHistory.forEach(msg => displayMessage(msg.role, msg.content));
 
             const handleSendMessage = async () => {
                 const userInput = chatInput.value.trim();
@@ -204,62 +222,52 @@
 
                 displayMessage('user', userInput);
                 conversationHistory.push({ role: 'user', content: userInput });
+                appState.chatHistory = conversationHistory; // Update global state
                 chatInput.value = "";
 
-                // Show thinking indicator
                 const thinkingDiv = document.createElement('div');
-                thinkingDiv.className = 'text-left mb-2';
                 thinkingDiv.id = 'thinking-indicator';
+                thinkingDiv.className = 'text-left mb-2';
                 thinkingDiv.innerHTML = `<span class="bg-gray-300 text-gray-800 p-2 rounded-lg inline-block">...</span>`;
-                chatHistory.appendChild(thinkingDiv);
-                chatHistory.scrollTop = chatHistory.scrollHeight;
+                chatHistoryEl.appendChild(thinkingDiv);
+                chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
 
                 try {
-                    const response = await fetch(APP_API_ENDPOINT, {
+                    const response = await fetch(CHAT_API_ENDPOINT, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: CHATBOT_LLM_MODEL,
-                            messages: conversationHistory
-                        })
+                        body: JSON.stringify({ model: CHATBOT_LLM_MODEL, messages: conversationHistory })
                     });
-
                     const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.error || `API request failed with status ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(data.error || `API request failed`);
 
                     const botResponse = data.choices[0].message.content;
-
-                    conversationHistory.push({ role: 'assistant', content: botResponse });
                     displayMessage('assistant', botResponse);
+                    conversationHistory.push({ role: 'assistant', content: botResponse });
+                    appState.chatHistory = conversationHistory; // Update global state
+
+                    await saveApplicationData(); // Auto-save after successful interaction
 
                 } catch (error) {
-                    console.error("Error calling backend:", error);
-                    displayMessage('assistant', `Sorry, I encountered an error. Error: ${error.message}`);
+                    displayMessage('assistant', `Sorry, an error occurred: ${error.message}`);
                 } finally {
-                    // Remove thinking indicator
-                    const indicator = document.getElementById('thinking-indicator');
-                    if (indicator) {
-                        indicator.remove();
-                    }
+                    thinkingDiv.remove();
                 }
             };
 
             chatSendBtn.addEventListener('click', handleSendMessage);
             chatInput.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') {
-                    handleSendMessage();
-                }
+                if (event.key === 'Enter') handleSendMessage();
             });
         }
 
-        // Initialize all features when the DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            setupDashboard();
-            setupReportingAssistant();
-            setupChatbot();
+
+        // --- App Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadApplicationData();
+            setupDashboard(appState.budget, appState.deadlines);
+            setupReportingAssistant(appState.reportText);
+            setupChatbot(appState.chatHistory);
         });
     </script>
 

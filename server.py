@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
@@ -6,6 +7,42 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__, static_folder='.', static_url_path='')
+DATA_FILE = 'data.json'
+
+# --- Data Persistence API ---
+
+@app.route('/api/data', methods=['GET'])
+def load_data():
+    """Loads application state from data.json."""
+    try:
+        if os.path.exists(DATA_FILE):
+            with open(DATA_FILE, 'r') as f:
+                return jsonify(json.load(f))
+        else:
+            # Return a default structure if the file doesn't exist
+            return jsonify({
+                "budget": {"spent": 0, "remaining": 100000},
+                "deadlines": [],
+                "reportText": "",
+                "chatHistory": []
+            })
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        return jsonify({"error": "Could not load data."}), 500
+
+@app.route('/api/data', methods=['POST'])
+def save_data():
+    """Saves application state to data.json."""
+    try:
+        data = request.get_json()
+        with open(DATA_FILE, 'w') as f:
+            json.dump(data, f, indent=4)
+        return jsonify({"success": True, "message": "Data saved successfully."})
+    except Exception as e:
+        print(f"Error saving data: {e}")
+        return jsonify({"error": "Could not save data."}), 500
+
+# --- Static File and Chat API ---
 
 @app.route('/')
 def index():

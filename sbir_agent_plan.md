@@ -13,11 +13,11 @@ The application will have the following key features:
 2.  **AI Reporting Assistant:**
     *   A text area where users can input their accomplishments and data for a reporting period.
     *   A button to generate a draft report based on the user's input.
-    *   The AI's response will be simulated with a pre-programmed template, with the option to connect to a live LLM.
+    *   This feature is connected to a live LLM via a secure backend.
 
 3.  **Compliance Chatbot:**
     *   A chat interface for users to ask questions about SBIR rules and regulations.
-    *   The chatbot is connected to a configurable LLM API.
+    *   This feature is connected to a live LLM via a secure backend.
 
 ## Development Roadmap
 
@@ -28,10 +28,12 @@ The application will have the following key features:
 
 ### Version 1.1: LLM Integration (Complete)
 - [x] **Compliance Chatbot:** Replaced simulated responses with a live LLM API connection.
+- [x] **Reporting Assistant:** Connected the "Generate Report Draft" feature to the LLM API.
+
+### Version 1.2: Backend & Security (Complete)
+- [x] **Backend Server:** Created a backend to securely manage API keys.
 
 ### Future Work (Proposed)
-- [ ] **Reporting Assistant:** Connect the "Generate Report Draft" feature to the LLM API.
-- [ ] **Backend Server:** Create a backend (e.g., using Node.js or Python) to securely manage API keys instead of handling them in the frontend.
 - [ ] **Data Persistence:** Add functionality to save and load grant data.
 - [ ] **Document Store:** Implement a system for uploading, saving, and referencing documents.
 - [ ] **Styling and UX:** Further refine the application's styling and user experience.
