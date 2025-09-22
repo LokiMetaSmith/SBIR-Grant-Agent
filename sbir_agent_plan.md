@@ -13,30 +13,25 @@ The application will have the following key features:
 2.  **AI Reporting Assistant:**
     *   A text area where users can input their accomplishments and data for a reporting period.
     *   A button to generate a draft report based on the user's input.
-    *   The AI's response will be simulated with a pre-programmed template.
+    *   The AI's response will be simulated with a pre-programmed template, with the option to connect to a live LLM.
 
 3.  **Compliance Chatbot:**
     *   A chat interface for users to ask questions about SBIR rules and regulations.
-    *   The chatbot will provide pre-programmed answers to common questions.
+    *   The chatbot is connected to a configurable LLM API.
 
-## Development Roadmap (TODO List)
-- [ ] **Phase 1: Project Setup**
-    - [x] Create `sbir_agent_plan.md` (this file).
-    - [ ] Create the basic `sbir_agent.html` file.
-    - [ ] Link Tailwind CSS and Chart.js libraries.
+## Development Roadmap
 
-- [ ] **Phase 2: Feature Implementation**
-    - [ ] **Dashboard:**
-        - [ ] Implement the budget overview chart using Chart.js with sample data.
-        - [ ] Implement the upcoming deadlines list with static data.
-    - [ ] **Reporting Assistant:**
-        - [ ] Create the UI with a text area and a "Generate Report" button.
-        - [ ] Implement the JavaScript logic to generate a simulated report draft.
-    - [ ] **Compliance Chatbot:**
-        - [ ] Create the chat UI.
-        - [ ] Implement the JavaScript logic to provide pre-programmed responses based on user input.
+### Version 1.0: Initial Prototype (Complete)
+- [x] Project Setup
+- [x] Feature Implementation (Simulated)
+- [x] Finalization
 
-- [ ] **Phase 3: Finalization**
-    - [ ] Review and test all features.
-    - [ ] Add comments to the code for clarity.
-    - [ ] Prepare for submission.
+### Version 1.1: LLM Integration (Complete)
+- [x] **Compliance Chatbot:** Replaced simulated responses with a live LLM API connection.
+
+### Future Work (Proposed)
+- [ ] **Reporting Assistant:** Connect the "Generate Report Draft" feature to the LLM API.
+- [ ] **Backend Server:** Create a backend (e.g., using Node.js or Python) to securely manage API keys instead of handling them in the frontend.
+- [ ] **Data Persistence:** Add functionality to save and load grant data.
+- [ ] **Document Store:** Implement a system for uploading, saving, and referencing documents.
+- [ ] **Styling and UX:** Further refine the application's styling and user experience.

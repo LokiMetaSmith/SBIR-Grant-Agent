@@ -64,14 +64,12 @@
     </div>
 
     <script>
-        // --- LLM Chatbot Configuration ---
-        // IMPORTANT: Replace these values with your LLM API details.
-        // For local models (e.g., Ollama, LM Studio), you might not need an API key.
-        // WARNING: Do not expose your API key in client-side code in a production environment.
-        // This method is for prototyping and local use only.
-        const LLM_API_ENDPOINT = 'http://localhost:11434/v1/chat/completions'; // Example for Ollama
-        const LLM_API_KEY = 'ollama'; // Example for Ollama, can be any string
-        const LLM_MODEL = 'llama3'; // Example for Ollama
+        // --- Backend and LLM Configuration ---
+        // The frontend now communicates with the local Python server, which securely handles the LLM API calls.
+        const APP_API_ENDPOINT = '/api/chat';
+        // Note: The specific LLM model is now passed in the body of the request.
+        const CHATBOT_LLM_MODEL = 'llama3'; // Or any other model your backend is configured to use.
+        const REPORTING_LLM_MODEL = 'llama3'; // You can use a different model for reporting if desired.
 
         // --- Dashboard Functionality ---
         function setupDashboard() {
@@ -124,13 +122,13 @@
             });
         }
 
-        // --- Reporting Assistant Functionality ---
+        // --- Reporting Assistant Functionality (LLM-Powered via Backend) ---
         function setupReportingAssistant() {
             const generateReportBtn = document.getElementById('generateReportBtn');
             const reportInput = document.getElementById('reportInput');
             const reportOutput = document.getElementById('reportOutput');
 
-            generateReportBtn.addEventListener('click', () => {
+            generateReportBtn.addEventListener('click', async () => {
                 const accomplishments = reportInput.value.trim();
 
                 if (accomplishments === "") {
@@ -139,23 +137,47 @@
                     return;
                 }
 
-                // Simulate AI-generated report
-                const reportDraft = `
-                    <h3 class="text-xl font-semibold mb-2">Quarterly Report Draft</h3>
-                    <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-                    <p><strong>Prepared For:</strong> SBIR Program Office</p>
-                    <hr class="my-2">
-                    <p><strong>Summary of Accomplishments:</p>
-                    <p class="mt-2 pl-4 border-l-4 border-gray-300">${accomplishments}</p>
-                    <p class="mt-4 text-sm text-gray-600"><em>This is a simulated AI-generated draft. Please review and edit as needed before submission.</em></p>
-                `;
-
-                reportOutput.innerHTML = reportDraft;
+                // Show loading state
+                reportOutput.innerHTML = `<p class="text-gray-500">Generating draft...</p>`;
                 reportOutput.classList.remove('hidden');
+
+                const systemPrompt = `You are an AI assistant specialized in generating sections for U.S. Small Business Innovation Research (SBIR) grant reports. Your task is to take the user's raw notes and accomplishments and format them into a professional, well-structured report section. The tone should be formal and objective. Focus on clearly presenting the technical progress and outcomes.`;
+
+                const messages = [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: accomplishments }
+                ];
+
+                try {
+                    const response = await fetch(APP_API_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: REPORTING_LLM_MODEL,
+                            messages: messages
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || `API request failed with status ${response.status}`);
+                    }
+
+                    const reportDraft = data.choices[0].message.content;
+
+                    // Sanitize the output slightly to avoid LLMs adding markdown to the whole block
+                    const formattedReport = reportDraft.replace(/```html/g, '').replace(/```/g, '');
+                    reportOutput.innerHTML = formattedReport;
+
+                } catch (error) {
+                    console.error("Error calling backend for reporting:", error);
+                    reportOutput.innerHTML = `<p class="text-red-500">Sorry, I encountered an error while generating the report. Error: ${error.message}</p>`;
+                }
             });
         }
 
-        // --- Compliance Chatbot Functionality (LLM-Powered) ---
+        // --- Compliance Chatbot Functionality (LLM-Powered via Backend) ---
         function setupChatbot() {
             const chatSendBtn = document.getElementById('chatSendBtn');
             const chatInput = document.getElementById('chatInput');
@@ -193,32 +215,29 @@
                 chatHistory.scrollTop = chatHistory.scrollHeight;
 
                 try {
-                    const response = await fetch(LLM_API_ENDPOINT, {
+                    const response = await fetch(APP_API_ENDPOINT, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${LLM_API_KEY}`
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            model: LLM_MODEL,
+                            model: CHATBOT_LLM_MODEL,
                             messages: conversationHistory
                         })
                     });
 
+                    const data = await response.json();
+
                     if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({ message: 'No error details available.' }));
-                        throw new Error(`API request failed with status ${response.status}: ${errorData.error ? errorData.error.message : response.statusText}`);
+                        throw new Error(data.error || `API request failed with status ${response.status}`);
                     }
 
-                    const data = await response.json();
                     const botResponse = data.choices[0].message.content;
 
                     conversationHistory.push({ role: 'assistant', content: botResponse });
                     displayMessage('assistant', botResponse);
 
                 } catch (error) {
-                    console.error("Error calling LLM API:", error);
-                    displayMessage('assistant', `Sorry, I encountered an error. Please check the console and your API configuration. Error: ${error.message}`);
+                    console.error("Error calling backend:", error);
+                    displayMessage('assistant', `Sorry, I encountered an error. Error: ${error.message}`);
                 } finally {
                     // Remove thinking indicator
                     const indicator = document.getElementById('thinking-indicator');

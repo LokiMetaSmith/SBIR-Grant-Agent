@@ -1,3 +1,50 @@
-# SBIR-Grant-Agent
+# SBIR Grant Agent
 
-SBIR Grant Management LLM AgentThis project is a web-based application designed to help small businesses manage their SBIR (Small Business Innovation Research) government grants. It features an AI-powered agent to assist with reporting, compliance, and overall project management.FeaturesInteractive Dashboard: Visualize your grant's budget and keep track of important deadlines.AI Reporting Assistant: Generate drafts for your quarterly and final reports by providing key data points.Compliance Chatbot: Get answers to your questions about SBIR rules and regulations in real-time.How to UseOpen sbir_agent.html in your web browser.Interact with the Dashboard:The Budget Overview chart shows your spending.The Upcoming Deadlines list will help you stay on track.Use the Reporting Assistant:Enter your accomplishments and data into the text area.Click "Generate Report Draft" to see an AI-generated summary.Chat with the Compliance Agent:Type your questions about SBIR grants into the chatbox at the bottom right.The agent will provide information on topics like allowable costs, reporting frequency, and more.Project Structuresbir_agent.html: The main file containing the HTML structure, styling (via Tailwind CSS), and JavaScript logic for the application.sbir_agent_plan.md: The project plan outlining the vision, features, and development roadmap for this agent.README.md: This file.Technical DetailsFrontend: The application is built with HTML, Tailwind CSS for styling, and vanilla JavaScript for interactivity.Charts: Chart.js is used for the budget visualization on the dashboard.LLM Simulation: The AI features in this version are simulated with pre-programmed responses to demonstrate the intended functionality. A full implementation would require connecting to a large language model API.This project serves as a prototype and can be extended with more advanced features and a full backend for a complete grant management solution.
+This project is a web-based application designed to help small businesses manage their SBIR (Small Business Innovation Research) government grants. It features an AI-powered agent to assist with reporting, compliance, and overall project management.
+
+## Features
+*   **Interactive Dashboard:** Visualize your grant's budget and keep track of important deadlines.
+*   **AI Reporting Assistant:** Generate drafts for your quarterly and final reports by providing key data points. This feature is powered by a configurable LLM.
+*   **Compliance Chatbot:** Get answers to your questions about SBIR rules and regulations in real-time, powered by a configurable LLM.
+
+## Technical Details
+*   **Frontend:** The application is a single-page application built with HTML, Tailwind CSS for styling, and vanilla JavaScript for interactivity. Charts are rendered using Chart.js.
+*   **Backend:** A simple Python Flask server acts as a secure proxy to handle API calls to the Language Model (LLM). This keeps API keys off the frontend.
+
+## Project Structure
+*   `sbir_agent.html`: The main file containing the HTML structure, styling, and JavaScript logic for the frontend application.
+*   `server.py`: The Python Flask backend server that forwards requests to the LLM API.
+*   `requirements.txt`: The Python dependencies for the backend server.
+*   `.env.example`: An example file showing the required environment variables for the server.
+*   `sbir_agent_plan.md`: The project plan outlining the vision, features, and development roadmap.
+*   `README.md`: This file.
+
+## How to Run
+
+### 1. Backend Setup
+Before running the application, you need to set up the backend server.
+
+**a. Configure Environment Variables:**
+Create a `.env` file in the root of the project by copying the example file:
+```bash
+cp .env.example .env
+```
+Now, open the `.env` file and add your actual LLM API endpoint and secret key.
+
+**b. Install Dependencies:**
+Install the required Python packages using pip:
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Running the Application
+
+**a. Start the Backend Server:**
+Run the following command in your terminal:
+```bash
+python server.py
+```
+The server will start on `http://127.0.0.1:5000`.
+
+**b. Open the Frontend:**
+Open the `sbir_agent.html` file in your web browser. The application will now be able to communicate with your backend, which will securely connect to the LLM.
