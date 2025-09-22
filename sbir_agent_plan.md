@@ -19,6 +19,9 @@ The application will have the following key features:
     *   A chat interface for users to ask questions about SBIR rules and regulations.
     *   This feature is connected to a live LLM via a secure backend.
 
+4.  **Document Store:**
+    *   An interface for uploading, storing, and referencing grant-related documents.
+
 ## Development Roadmap
 
 ### Version 1.0: Initial Prototype (Complete)
@@ -36,6 +39,8 @@ The application will have the following key features:
 ### Version 1.3: Data Persistence (Complete)
 - [x] **Data Persistence:** Added functionality to save and load grant data.
 
-### Future Work (Proposed)
-- [ ] **Document Store:** Implement a system for uploading, saving, and referencing documents.
+### Version 1.4: Document Store (Complete)
+- [x] **Document Store:** Implemented a system for uploading, saving, and referencing documents.
+
+### Version 1.5: UI/UX Polish (In Progress)
 - [ ] **Styling and UX:** Further refine the application's styling and user experience.
