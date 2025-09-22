@@ -3,11 +3,38 @@ import json
 import requests
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 DATA_FILE = 'data.json'
+UPLOAD_FOLDER = 'uploads'
+
+# Create upload folder if it doesn't exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# --- Document Store API ---
+
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    """Handles file uploads."""
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request."}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file."}), 400
+    if file:
+        filename = secure_filename(file.filename)
+        save_path = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(save_path)
+        return jsonify({"success": True, "filename": filename, "path": f"/{UPLOAD_FOLDER}/{filename}"}), 201
+
+@app.route('/uploads/<path:filename>')
+def serve_upload(filename):
+    """Serves an uploaded file."""
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
 
 # --- Data Persistence API ---
 
@@ -24,7 +51,8 @@ def load_data():
                 "budget": {"spent": 0, "remaining": 100000},
                 "deadlines": [],
                 "reportText": "",
-                "chatHistory": []
+                "chatHistory": [],
+                "documents": []
             })
     except Exception as e:
         print(f"Error loading data: {e}")

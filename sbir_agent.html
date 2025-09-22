@@ -32,8 +32,33 @@
                 </section>
             </div>
 
-            <!-- Right Column: Reporting and Chatbot -->
+            <!-- Right Column: Reporting, Chatbot, and Documents -->
             <div class="space-y-8">
+                <!-- Document Store -->
+                <section class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Document Store</h2>
+                    <form id="uploadForm" class="space-y-4">
+                        <div>
+                            <label for="fileInput" class="block text-sm font-medium text-gray-700">Select a file to upload:</label>
+                            <input type="file" id="fileInput" name="file" class="mt-1 block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-blue-50 file:text-blue-700
+                                hover:file:bg-blue-100"/>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded">
+                            Upload Document
+                        </button>
+                    </form>
+                    <div id="uploadStatus" class="mt-4 text-sm"></div>
+                    <hr class="my-6">
+                    <h3 class="text-xl font-semibold mb-4">Uploaded Documents</h3>
+                    <ul id="documentList" class="list-disc list-inside space-y-2">
+                        <!-- Document list will be populated by JavaScript -->
+                    </ul>
+                </section>
+
                 <!-- AI Reporting Assistant -->
                 <section class="bg-white p-6 rounded-lg shadow-md">
                     <div class="flex justify-between items-center mb-4">
@@ -72,6 +97,7 @@
         // --- Global State and Configuration ---
         const DATA_API_ENDPOINT = '/api/data';
         const CHAT_API_ENDPOINT = '/api/chat';
+        const UPLOAD_API_ENDPOINT = '/api/upload';
         const CHATBOT_LLM_MODEL = 'llama3';
         const REPORTING_LLM_MODEL = 'llama3';
 
@@ -79,7 +105,8 @@
             budget: { spent: 0, remaining: 100000 },
             deadlines: [],
             reportText: "",
-            chatHistory: []
+            chatHistory: [],
+            documents: []
         };
 
         // --- Core Functions ---
@@ -88,7 +115,10 @@
             try {
                 const response = await fetch(DATA_API_ENDPOINT);
                 if (!response.ok) throw new Error('Failed to load data from server.');
-                appState = await response.json();
+                const data = await response.json();
+                // Ensure documents is always an array for backward compatibility
+                data.documents = data.documents || [];
+                appState = data;
                 console.log('Application data loaded:', appState);
             } catch (error) {
                 console.error('Could not load application data:', error);
@@ -100,7 +130,7 @@
             // Update appState with the latest from the UI before saving
             const reportInput = document.getElementById('reportInput');
             appState.reportText = reportInput.value;
-            // Chat history is updated directly in the chatbot logic.
+            // Chat history and documents are updated directly in their respective functions.
             // Budget and deadlines are not yet editable.
 
             try {
@@ -111,10 +141,8 @@
                 });
                 if (!response.ok) throw new Error('Failed to save data to server.');
                 console.log('Application data saved.');
-                // Optionally, show a success indicator to the user
             } catch (error) {
                 console.error('Could not save application data:', error);
-                // Optionally, show a failure indicator to the user
             }
         }
 
@@ -194,8 +222,7 @@
             const chatInput = document.getElementById('chatInput');
             const chatHistoryEl = document.getElementById('chatHistory');
 
-            appState.chatHistory = initialHistory;
-            // The system prompt is always the first message, but not displayed.
+            appState.chatHistory = initialHistory || [];
             const conversationHistory = [ ...appState.chatHistory ];
             if (conversationHistory.length === 0 || conversationHistory[0].role !== 'system') {
                 conversationHistory.unshift({
@@ -205,7 +232,7 @@
             }
 
             const displayMessage = (role, content) => {
-                if (role === 'system') return; // Do not display system messages
+                if (role === 'system') return;
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `${role === 'user' ? 'text-right' : 'text-left'} mb-2`;
                 messageDiv.innerHTML = `<span class="${role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-800'} p-2 rounded-lg inline-block">${content}</span>`;
@@ -213,16 +240,16 @@
                 chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
             };
 
-            // Load initial history
             conversationHistory.forEach(msg => displayMessage(msg.role, msg.content));
 
             const handleSendMessage = async () => {
                 const userInput = chatInput.value.trim();
                 if (userInput === "") return;
 
-                displayMessage('user', userInput);
-                conversationHistory.push({ role: 'user', content: userInput });
-                appState.chatHistory = conversationHistory; // Update global state
+                const userMessage = { role: 'user', content: userInput };
+                displayMessage(userMessage.role, userMessage.content);
+                conversationHistory.push(userMessage);
+                appState.chatHistory.push(userMessage);
                 chatInput.value = "";
 
                 const thinkingDiv = document.createElement('div');
@@ -242,11 +269,12 @@
                     if (!response.ok) throw new Error(data.error || `API request failed`);
 
                     const botResponse = data.choices[0].message.content;
-                    displayMessage('assistant', botResponse);
-                    conversationHistory.push({ role: 'assistant', content: botResponse });
-                    appState.chatHistory = conversationHistory; // Update global state
+                    const assistantMessage = { role: 'assistant', content: botResponse };
+                    displayMessage(assistantMessage.role, assistantMessage.content);
+                    conversationHistory.push(assistantMessage);
+                    appState.chatHistory.push(assistantMessage);
 
-                    await saveApplicationData(); // Auto-save after successful interaction
+                    await saveApplicationData();
 
                 } catch (error) {
                     displayMessage('assistant', `Sorry, an error occurred: ${error.message}`);
@@ -261,6 +289,73 @@
             });
         }
 
+        function setupDocumentStore(initialDocuments) {
+            const uploadForm = document.getElementById('uploadForm');
+            const fileInput = document.getElementById('fileInput');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const documentList = document.getElementById('documentList');
+
+            appState.documents = initialDocuments || [];
+
+            const renderDocuments = () => {
+                documentList.innerHTML = '';
+                if (!appState.documents || appState.documents.length === 0) {
+                    documentList.innerHTML = '<li>No documents uploaded yet.</li>';
+                    return;
+                }
+                appState.documents.forEach(doc => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = doc.path;
+                    a.textContent = doc.filename;
+                    a.target = '_blank';
+                    a.className = 'text-indigo-600 hover:text-indigo-800 underline';
+                    li.appendChild(a);
+                    documentList.appendChild(li);
+                });
+            };
+
+            uploadForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const file = fileInput.files[0];
+                if (!file) {
+                    uploadStatus.textContent = 'Please select a file first.';
+                    uploadStatus.className = 'mt-4 text-sm text-red-600';
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                uploadStatus.textContent = 'Uploading...';
+                uploadStatus.className = 'mt-4 text-sm text-gray-600';
+
+                try {
+                    const response = await fetch(UPLOAD_API_ENDPOINT, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'File upload failed.');
+
+                    uploadStatus.textContent = `Successfully uploaded "${result.filename}"!`;
+                    uploadStatus.className = 'mt-4 text-sm text-green-600';
+
+                    appState.documents.push({ filename: result.filename, path: result.path });
+                    await saveApplicationData();
+
+                    renderDocuments();
+                    uploadForm.reset();
+
+                } catch (error) {
+                    uploadStatus.textContent = `Upload failed: ${error.message}`;
+                    uploadStatus.className = 'mt-4 text-sm text-red-600';
+                }
+            });
+
+            renderDocuments();
+        }
 
         // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', async () => {
@@ -268,6 +363,7 @@
             setupDashboard(appState.budget, appState.deadlines);
             setupReportingAssistant(appState.reportText);
             setupChatbot(appState.chatHistory);
+            setupDocumentStore(appState.documents);
         });
     </script>
 

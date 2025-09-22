@@ -33,7 +33,9 @@ The application will have the following key features:
 ### Version 1.2: Backend & Security (Complete)
 - [x] **Backend Server:** Created a backend to securely manage API keys.
 
+### Version 1.3: Data Persistence (Complete)
+- [x] **Data Persistence:** Added functionality to save and load grant data.
+
 ### Future Work (Proposed)
-- [ ] **Data Persistence:** Add functionality to save and load grant data.
 - [ ] **Document Store:** Implement a system for uploading, saving, and referencing documents.
 - [ ] **Styling and UX:** Further refine the application's styling and user experience.
