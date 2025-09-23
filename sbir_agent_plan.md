@@ -42,5 +42,8 @@ The application will have the following key features:
 ### Version 1.4: Document Store (Complete)
 - [x] **Document Store:** Implemented a system for uploading, saving, and referencing documents.
 
-### Version 1.5: UI/UX Polish (In Progress)
-- [ ] **Styling and UX:** Further refine the application's styling and user experience.
+### Version 1.5: UI/UX Polish (Complete)
+- [x] **Styling and UX:** Refined the application's styling and user experience.
+
+### Future Work (Proposed)
+- [ ] **Mixture of Experts:** Allow configuration and selection of multiple LLM providers.

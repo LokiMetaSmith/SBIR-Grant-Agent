@@ -25,11 +25,14 @@ This project is a web-based application designed to help small businesses manage
 Before running the application, you need to set up the backend server.
 
 **a. Configure Environment Variables:**
-Create a `.env` file in the root of the project by copying the example file:
-```bash
-cp .env.example .env
-```
-Now, open the `.env` file and add your actual LLM API endpoint and secret key.
+Create a `.env` file in the root of the project by copying the `.env.example` file. This file allows you to configure multiple LLM "experts".
+
+The backend will load any environment variables that follow this pattern:
+- `LLM_[INDEX]_NAME`: The display name for the expert (e.g., "OpenAI GPT-4").
+- `LLM_[INDEX]_ENDPOINT`: The full API endpoint URL.
+- `LLM_[INDEX]_KEY`: The secret API key for that service.
+
+You can add as many experts as you like by incrementing the index (e.g., `LLM_1_...`, `LLM_2_...`, etc.). The names you provide will appear in the dropdown menus in the application.
 
 **b. Install Dependencies:**
 Install the required Python packages using pip:
