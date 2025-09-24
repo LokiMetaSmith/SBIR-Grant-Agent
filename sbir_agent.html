@@ -45,6 +45,30 @@
                         <!-- Deadlines will be populated by JavaScript -->
                     </ul>
                 </section>
+
+                <!-- Opportunity Search -->
+                <section class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Opportunity Search (sam.gov)</h2>
+                    <form id="opportunitySearchForm" class="space-y-4">
+                        <input type="text" id="searchKeywords" placeholder="Keywords (e.g., SBIR, AI, sensor)" class="w-full p-2 border rounded-md">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="searchPostedFrom" class="block text-sm font-medium text-gray-700">Posted From:</label>
+                                <input type="date" id="searchPostedFrom" class="w-full p-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label for="searchPostedTo" class="block text-sm font-medium text-gray-700">Posted To:</label>
+                                <input type="date" id="searchPostedTo" class="w-full p-2 border rounded-md">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                            Search for Opportunities
+                        </button>
+                    </form>
+                    <div id="opportunityResults" class="mt-6">
+                        <!-- Search results will be populated here -->
+                    </div>
+                </section>
             </div>
 
             <!-- Right Column: Reporting, Chatbot, and Documents -->
@@ -330,6 +354,71 @@
             // ... (no changes) ...
         }
 
+        function setupOpportunitySearch() {
+            const searchForm = document.getElementById('opportunitySearchForm');
+            const keywordsInput = document.getElementById('searchKeywords');
+            const postedFromInput = document.getElementById('searchPostedFrom');
+            const postedToInput = document.getElementById('searchPostedTo');
+            const resultsDiv = document.getElementById('opportunityResults');
+
+            searchForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const postedFrom = postedFromInput.value;
+                const postedTo = postedToInput.value;
+
+                if (!postedFrom || !postedTo) {
+                    resultsDiv.innerHTML = `<p class="text-red-500">Please select both a "From" and "To" date.</p>`;
+                    return;
+                }
+
+                resultsDiv.innerHTML = '<div class="spinner"></div>';
+
+                // Format dates from yyyy-mm-dd to mm/dd/yyyy for the API
+                const formattedPostedFrom = new Date(postedFrom).toLocaleDateString('en-US');
+                const formattedPostedTo = new Date(postedTo).toLocaleDateString('en-US');
+
+                try {
+                    const response = await fetch('/api/search_opportunities', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            keywords: keywordsInput.value,
+                            postedFrom: formattedPostedFrom,
+                            postedTo: formattedPostedTo
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Failed to fetch opportunities.');
+
+                    resultsDiv.innerHTML = '';
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = '<p>No opportunities found for the selected criteria.</p>';
+                        return;
+                    }
+
+                    const ul = document.createElement('ul');
+                    ul.className = 'space-y-4';
+                    data.forEach(opp => {
+                        const li = document.createElement('li');
+                        li.className = 'p-4 border rounded-md bg-gray-50';
+                        li.innerHTML = `
+                            <h4 class="font-bold text-lg">${opp.title}</h4>
+                            <p class="text-sm text-gray-600">${opp.fullParentPathName || 'N/A'}</p>
+                            <p class="text-sm"><strong>Solicitation #:</strong> ${opp.solicitationNumber || 'N/A'}</p>
+                            <p class="text-sm"><strong>Posted:</strong> ${opp.postedDate}</p>
+                            ${opp.uiLink ? `<a href="${opp.uiLink}" target="_blank" class="text-indigo-600 hover:underline">View on sam.gov</a>` : ''}
+                        `;
+                        ul.appendChild(li);
+                    });
+                    resultsDiv.appendChild(ul);
+
+                } catch (error) {
+                    resultsDiv.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+                }
+            });
+        }
+
         // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', async () => {
             await loadExperts();
@@ -338,6 +427,7 @@
             setupReportingAssistant(appState.reportText, appState.experts);
             setupChatbot(appState.chatHistory, appState.experts);
             setupDocumentStore(appState.documents);
+            setupOpportunitySearch();
         });
     </script>
 

@@ -35,6 +35,8 @@ The backend will load any environment variables that follow this pattern:
 
 You can add as many experts as you like by incrementing the index (e.g., `LLM_1_...`, `LLM_2_...`, etc.). The names you provide will appear in the dropdown menus in the application.
 
+You will also need to provide a `SAM_API_KEY` to enable the Grant Opportunity Search feature. You can obtain a key by registering on `sam.gov`.
+
 **b. Install Dependencies:**
 Install the required Python packages using pip:
 ```bash
