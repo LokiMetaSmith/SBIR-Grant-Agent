@@ -24,8 +24,15 @@ def load_experts_from_env():
             name = value
             endpoint = os.getenv(f"LLM_{index}_ENDPOINT")
             api_key = os.getenv(f"LLM_{index}_KEY")
+            # Get the optional model name, fallback to the display name if not provided
+            model_name = os.getenv(f"LLM_{index}_MODEL_NAME", name)
+
             if name and endpoint and api_key:
-                experts_config[name] = {"endpoint": endpoint, "api_key": api_key}
+                experts_config[name] = {
+                    "endpoint": endpoint,
+                    "api_key": api_key,
+                    "model_name": model_name
+                }
     EXPERTS = experts_config
     if not EXPERTS:
         print("Warning: No LLM experts configured. Please set LLM_1_NAME, LLM_1_ENDPOINT, and LLM_1_KEY environment variables.")
@@ -122,11 +129,8 @@ def chat_handler():
         'Authorization': f'Bearer {expert["api_key"]}'
     }
 
-    # The 'model' in the payload for the downstream API might be different
-    # from our internal 'expert_name'. For now, we assume they are the same
-    # or that the downstream API doesn't require a model parameter if the
-    # endpoint is already model-specific. We'll just send the messages.
     payload = {
+        "model": expert["model_name"], # Use the specific model name for the downstream API
         "messages": data["messages"]
     }
 

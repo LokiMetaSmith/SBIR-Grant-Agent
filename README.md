@@ -31,6 +31,7 @@ The backend will load any environment variables that follow this pattern:
 - `LLM_[INDEX]_NAME`: The display name for the expert (e.g., "OpenAI GPT-4").
 - `LLM_[INDEX]_ENDPOINT`: The full API endpoint URL.
 - `LLM_[INDEX]_KEY`: The secret API key for that service.
+- `LLM_[INDEX]_MODEL_NAME`: (Optional) The specific model name the API expects (e.g., "gpt-4-turbo"). If not provided, it defaults to the `NAME`.
 
 You can add as many experts as you like by incrementing the index (e.g., `LLM_1_...`, `LLM_2_...`, etc.). The names you provide will appear in the dropdown menus in the application.
 
