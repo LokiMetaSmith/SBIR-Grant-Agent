@@ -118,7 +118,11 @@ def load_data():
                 "deadlines": [],
                 "reportText": "",
                 "chatHistory": [],
-                "documents": []
+                "documents": [],
+                "researchProfile": {
+                    "capabilities": "",
+                    "topics": ""
+                }
             })
     except Exception as e:
         print(f"Error loading data: {e}")

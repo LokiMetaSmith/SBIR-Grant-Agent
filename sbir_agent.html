@@ -69,6 +69,25 @@
                         <!-- Search results will be populated here -->
                     </div>
                 </section>
+
+                <!-- Research Profile -->
+                <section class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Research Profile</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="capabilities" class="block text-sm font-medium text-gray-700">Core Capabilities</label>
+                            <textarea id="capabilities" rows="4" class="w-full p-2 border rounded-md" placeholder="Enter your team's core technical capabilities, skills, and resources..."></textarea>
+                        </div>
+                        <div>
+                            <label for="topics" class="block text-sm font-medium text-gray-700">Research Topics of Interest</label>
+                            <textarea id="topics" rows="4" class="w-full p-2 border rounded-md" placeholder="Enter keywords, domains, and specific research topics of interest..."></textarea>
+                        </div>
+                        <button id="saveProfileBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                            Save Profile
+                        </button>
+                        <div id="profileSaveStatus" class="text-center text-sm text-green-600 h-4"></div>
+                    </div>
+                </section>
             </div>
 
             <!-- Right Column: Reporting, Chatbot, and Documents -->
@@ -419,6 +438,28 @@
             });
         }
 
+        function setupResearchProfile(profile) {
+            const capabilitiesInput = document.getElementById('capabilities');
+            const topicsInput = document.getElementById('topics');
+            const saveBtn = document.getElementById('saveProfileBtn');
+            const saveStatus = document.getElementById('profileSaveStatus');
+
+            if (profile) {
+                capabilitiesInput.value = profile.capabilities || '';
+                topicsInput.value = profile.topics || '';
+            }
+
+            saveBtn.addEventListener('click', async () => {
+                appState.researchProfile = {
+                    capabilities: capabilitiesInput.value,
+                    topics: topicsInput.value
+                };
+                await saveApplicationData();
+                // The global save function provides status feedback, but we can add a specific one here if needed.
+                // For now, relying on the other save button's feedback is enough.
+            });
+        }
+
         // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', async () => {
             await loadExperts();
@@ -428,6 +469,7 @@
             setupChatbot(appState.chatHistory, appState.experts);
             setupDocumentStore(appState.documents);
             setupOpportunitySearch();
+            setupResearchProfile(appState.researchProfile);
         });
     </script>
 
