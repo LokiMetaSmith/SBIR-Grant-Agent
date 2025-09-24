@@ -44,6 +44,42 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Load experts on startup
 load_experts_from_env()
 
+# --- Opportunity Search API ---
+
+@app.route('/api/search_opportunities', methods=['POST'])
+def search_opportunities():
+    """Searches the sam.gov API for opportunities."""
+    sam_api_key = os.getenv("SAM_API_KEY")
+    if not sam_api_key:
+        return jsonify({"error": "SAM.gov API key is not configured on the server."}), 500
+
+    data = request.get_json()
+    keywords = data.get('keywords', '')
+    postedFrom = data.get('postedFrom')
+    postedTo = data.get('postedTo')
+
+    if not postedFrom or not postedTo:
+        return jsonify({"error": "A date range (postedFrom and postedTo) is required."}), 400
+
+    params = {
+        "api_key": sam_api_key,
+        "limit": 50,
+        "postedFrom": postedFrom,
+        "postedTo": postedTo,
+        "title": keywords # Search keywords in the title
+    }
+
+    try:
+        response = requests.get("https://api.sam.gov/opportunities/v2/search", params=params, timeout=30)
+        response.raise_for_status()
+        return jsonify(response.json().get("opportunitiesData", []))
+    except requests.exceptions.RequestException as e:
+        print(f"Error calling SAM.gov API: {e}")
+        return jsonify({"error": f"Failed to connect to the SAM.gov API: {e}"}), 502
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return jsonify({"error": "An unexpected error occurred on the server."}), 500
+
 # --- Document Store API ---
 
 @app.route('/api/upload', methods=['POST'])
