@@ -45,5 +45,13 @@ The application will have the following key features:
 ### Version 1.5: UI/UX Polish (Complete)
 - [x] **Styling and UX:** Refined the application's styling and user experience.
 
-### Future Work (Proposed)
-- [ ] **Mixture of Experts:** Allow configuration and selection of multiple LLM providers.
+### Version 1.6: Mixture of Experts (Complete)
+- [x] **Mixture of Experts:** Allowed configuration and selection of multiple LLM providers.
+
+### Version 1.7: Research Profile (Complete)
+- [x] **Research Profile:** Created a template to store a user's capabilities and research topics.
+
+### Version 1.8: Automated Agent Features (In Progress)
+- [ ] **Automated Application Drafting:** Generate initial application drafts for opportunities.
+- [ ] **Automated Grant Matching:** Continuously search for new opportunities and flag those that match the research profile.
+- [ ] **Styling and UX:** Further refine the application's styling and user experience.

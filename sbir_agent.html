@@ -69,6 +69,25 @@
                         <!-- Search results will be populated here -->
                     </div>
                 </section>
+
+                <!-- Research Profile -->
+                <section class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Research Profile</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="capabilities" class="block text-sm font-medium text-gray-700">Core Capabilities</label>
+                            <textarea id="capabilities" rows="4" class="w-full p-2 border rounded-md" placeholder="Enter your team's core technical capabilities, skills, and resources..."></textarea>
+                        </div>
+                        <div>
+                            <label for="topics" class="block text-sm font-medium text-gray-700">Research Topics of Interest</label>
+                            <textarea id="topics" rows="4" class="w-full p-2 border rounded-md" placeholder="Enter keywords, domains, and specific research topics of interest..."></textarea>
+                        </div>
+                        <button id="saveProfileBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                            Save Profile
+                        </button>
+                        <div id="profileSaveStatus" class="text-center text-sm text-green-600 h-4"></div>
+                    </div>
+                </section>
             </div>
 
             <!-- Right Column: Reporting, Chatbot, and Documents -->
@@ -137,6 +156,26 @@
                 </section>
             </div>
         </main>
+    </div>
+
+    <!-- Modal for Application Draft -->
+    <div id="draftModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-2xl leading-6 font-medium text-gray-900">Generated Application Draft</h3>
+                <div id="draftModalContent" class="mt-4 px-7 py-3 max-h-96 overflow-y-auto text-left">
+                    <!-- Draft content will be populated here -->
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="copyDraftBtn" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
+                        Copy to Clipboard
+                    </button>
+                    <button id="closeModalBtn" class="ml-4 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -354,12 +393,36 @@
             // ... (no changes) ...
         }
 
+
+        function setupResearchProfile(profile) {
+            const capabilitiesInput = document.getElementById('capabilities');
+            const topicsInput = document.getElementById('topics');
+            const saveBtn = document.getElementById('saveProfileBtn');
+            const saveStatus = document.getElementById('profileSaveStatus');
+
+            if (profile) {
+                capabilitiesInput.value = profile.capabilities || '';
+                topicsInput.value = profile.topics || '';
+            }
+
+            saveBtn.addEventListener('click', async () => {
+                appState.researchProfile = {
+                    capabilities: capabilitiesInput.value,
+                    topics: topicsInput.value
+                };
+                await saveApplicationData();
+                // The global save function provides status feedback, but we can add a specific one here if needed.
+                // For now, relying on the other save button's feedback is enough.
+            });
+        }
+
         function setupOpportunitySearch() {
             const searchForm = document.getElementById('opportunitySearchForm');
             const keywordsInput = document.getElementById('searchKeywords');
             const postedFromInput = document.getElementById('searchPostedFrom');
             const postedToInput = document.getElementById('searchPostedTo');
             const resultsDiv = document.getElementById('opportunityResults');
+            let currentOpportunities = [];
 
             searchForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -372,8 +435,6 @@
                 }
 
                 resultsDiv.innerHTML = '<div class="spinner"></div>';
-
-                // Format dates from yyyy-mm-dd to mm/dd/yyyy for the API
                 const formattedPostedFrom = new Date(postedFrom).toLocaleDateString('en-US');
                 const formattedPostedTo = new Date(postedTo).toLocaleDateString('en-US');
 
@@ -391,6 +452,7 @@
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.error || 'Failed to fetch opportunities.');
 
+                    currentOpportunities = data; // Store results
                     resultsDiv.innerHTML = '';
                     if (data.length === 0) {
                         resultsDiv.innerHTML = '<p>No opportunities found for the selected criteria.</p>';
@@ -399,7 +461,7 @@
 
                     const ul = document.createElement('ul');
                     ul.className = 'space-y-4';
-                    data.forEach(opp => {
+                    data.forEach((opp, index) => {
                         const li = document.createElement('li');
                         li.className = 'p-4 border rounded-md bg-gray-50';
                         li.innerHTML = `
@@ -407,7 +469,10 @@
                             <p class="text-sm text-gray-600">${opp.fullParentPathName || 'N/A'}</p>
                             <p class="text-sm"><strong>Solicitation #:</strong> ${opp.solicitationNumber || 'N/A'}</p>
                             <p class="text-sm"><strong>Posted:</strong> ${opp.postedDate}</p>
-                            ${opp.uiLink ? `<a href="${opp.uiLink}" target="_blank" class="text-indigo-600 hover:underline">View on sam.gov</a>` : ''}
+                            <div class="mt-2">
+                                ${opp.uiLink ? `<a href="${opp.uiLink}" target="_blank" class="text-indigo-600 hover:underline">View on sam.gov</a>` : ''}
+                                <button data-index="${index}" class="draft-btn ml-4 px-3 py-1 bg-cyan-500 text-white text-xs font-bold rounded-full hover:bg-cyan-600">Draft Application</button>
+                            </div>
                         `;
                         ul.appendChild(li);
                     });
@@ -417,6 +482,66 @@
                     resultsDiv.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
                 }
             });
+
+            resultsDiv.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('draft-btn')) {
+                    const index = e.target.dataset.index;
+                    const opportunity = currentOpportunities[index];
+                    const expertSelect = document.getElementById('chatExpertSelect'); // Use chatbot's expert selector
+                    const selectedExpert = expertSelect.value;
+
+                    if (expertSelect.disabled) {
+                        alert("Please configure an LLM expert first.");
+                        return;
+                    }
+
+                    openDraftModal(opportunity, selectedExpert);
+                }
+            });
+        }
+
+        function setupDraftModal() {
+            const modal = document.getElementById('draftModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const copyDraftBtn = document.getElementById('copyDraftBtn');
+            const modalContent = document.getElementById('draftModalContent');
+
+            closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+            copyDraftBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(modalContent.innerText);
+                copyDraftBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyDraftBtn.textContent = 'Copy to Clipboard';
+                }, 2000);
+            });
+        }
+
+        async function openDraftModal(opportunity, selectedExpert) {
+            const modal = document.getElementById('draftModal');
+            const modalContent = document.getElementById('draftModalContent');
+
+            modal.classList.remove('hidden');
+            modalContent.innerHTML = '<div class="spinner mx-auto"></div>';
+
+            try {
+                const response = await fetch('/api/draft_application', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        opportunity: opportunity,
+                        profile: appState.researchProfile,
+                        expert: selectedExpert
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Failed to generate draft.');
+
+                modalContent.innerHTML = `<pre class="whitespace-pre-wrap font-sans text-sm">${data.draft}</pre>`;
+
+            } catch (error) {
+                modalContent.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+            }
         }
 
         // --- App Initialization ---
@@ -428,6 +553,8 @@
             setupChatbot(appState.chatHistory, appState.experts);
             setupDocumentStore(appState.documents);
             setupOpportunitySearch();
+            setupResearchProfile(appState.researchProfile);
+            setupDraftModal();
         });
     </script>
 

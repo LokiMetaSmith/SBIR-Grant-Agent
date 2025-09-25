@@ -49,6 +49,17 @@ load_experts_from_env()
 @app.route('/api/search_opportunities', methods=['POST'])
 def search_opportunities():
     """Searches the sam.gov API for opportunities."""
+    # Return mock data if in test mode
+    if os.getenv("TEST_MODE") == "true":
+        return jsonify([{
+            "title": "Test SBIR Opportunity",
+            "fullParentPathName": "Test Agency",
+            "solicitationNumber": "TEST-123",
+            "postedDate": "2025-09-25",
+            "description": "This is a test opportunity for drafting.",
+            "uiLink": "http://example.com"
+        }])
+
     sam_api_key = os.getenv("SAM_API_KEY")
     if not sam_api_key:
         return jsonify({"error": "SAM.gov API key is not configured on the server."}), 500
@@ -79,6 +90,68 @@ def search_opportunities():
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return jsonify({"error": "An unexpected error occurred on the server."}), 500
+
+# --- Application Drafting API ---
+
+@app.route('/api/draft_application', methods=['POST'])
+def draft_application():
+    """Generates an application draft using an LLM."""
+    data = request.get_json()
+    if not data or 'opportunity' not in data or 'profile' not in data or 'expert' not in data:
+        return jsonify({"error": "Invalid request body. 'opportunity', 'profile', and 'expert' keys are required."}), 400
+
+    opportunity = data['opportunity']
+    profile = data['profile']
+    expert_name = data['expert']
+
+    expert = EXPERTS.get(expert_name)
+    if not expert:
+        return jsonify({"error": f"Expert '{expert_name}' not found."}), 404
+
+    # Construct a detailed prompt for the LLM
+    prompt = f"""
+    You are a professional grant writer specializing in U.S. SBIR/STTR proposals. Your task is to generate a compelling, well-structured initial draft for a research proposal based on the provided information.
+
+    **Research Profile (My Capabilities):**
+    - Core Capabilities: {profile.get('capabilities', 'N/A')}
+    - Research Topics of Interest: {profile.get('topics', 'N/A')}
+
+    **Grant Opportunity Details:**
+    - Title: {opportunity.get('title', 'N/A')}
+    - Agency: {opportunity.get('fullParentPathName', 'N/A')}
+    - Solicitation Number: {opportunity.get('solicitationNumber', 'N/A')}
+    - Description: {opportunity.get('description', 'No description provided.')}
+
+    **Instructions:**
+    Based on the alignment between my research profile and the grant opportunity, please generate an initial project summary or abstract. The draft should:
+    1.  Clearly state the research problem and its significance.
+    2.  Propose a clear, innovative solution that leverages my core capabilities.
+    3.  Briefly outline the research objectives and technical approach.
+    4.  Maintain a professional and persuasive tone.
+
+    Begin the draft now.
+    """
+
+    messages = [{"role": "system", "content": prompt}]
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {expert["api_key"]}'
+    }
+    payload = {
+        "model": expert["model_name"],
+        "messages": messages
+    }
+
+    try:
+        response = requests.post(expert["endpoint"], headers=headers, json=payload, timeout=60) # Longer timeout for generation
+        response.raise_for_status()
+        draft_text = response.json()['choices'][0]['message']['content']
+        return jsonify({"draft": draft_text})
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to connect to the LLM API: {e}"}), 502
+    except Exception as e:
+        return jsonify({"error": f"An unexpected error occurred: {e}"}), 500
 
 # --- Document Store API ---
 
@@ -118,7 +191,11 @@ def load_data():
                 "deadlines": [],
                 "reportText": "",
                 "chatHistory": [],
-                "documents": []
+                "documents": [],
+                "researchProfile": {
+                    "capabilities": "",
+                    "topics": ""
+                }
             })
     except Exception as e:
         print(f"Error loading data: {e}")
