@@ -51,7 +51,9 @@ The application will have the following key features:
 ### Version 1.7: Research Profile (Complete)
 - [x] **Research Profile:** Created a template to store a user's capabilities and research topics.
 
-### Version 1.8: Automated Agent Features (In Progress)
-- [ ] **Automated Application Drafting:** Generate initial application drafts for opportunities.
+### Version 1.8: Automated Application Drafting (Complete)
+- [x] **Automated Application Drafting:** Generate initial application drafts for opportunities.
+
+### Version 2.0: Proactive Agent (In Progress)
 - [ ] **Automated Grant Matching:** Continuously search for new opportunities and flag those that match the research profile.
 - [ ] **Styling and UX:** Further refine the application's styling and user experience.
