@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        body {
+            font-size: 16px;
+        }
         .spinner {
             display: inline-block;
             border: 4px solid rgba(0, 0, 0, 0.1);
@@ -20,11 +23,20 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .tab-btn {
+            transition: background-color 0.2s ease-in-out;
+        }
+        .tab-btn.active {
+            border-bottom: 2px solid #4f46e5;
+            color: #4f46e5;
+            font-weight: 600;
+        }
     </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💡</text></svg>">
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
-    <div class="container mx-auto p-8">
+    <div class="container mx-auto p-8 flex-grow">
         <header class="mb-8">
             <h1 class="text-4xl font-bold text-center text-gray-700">SBIR Grant Management Dashboard</h1>
         </header>
@@ -41,132 +53,150 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Left Column: Dashboard -->
                 <div class="space-y-8">
-                <!-- Budget Overview -->
-                <section class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4">Budget Overview</h2>
-                    <canvas id="budgetChart"></canvas>
-                </section>
+                    <!-- Budget Overview -->
+                    <section class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-600">Budget Overview</h2>
+                        <canvas id="budgetChart"></canvas>
+                    </section>
 
-                <!-- Upcoming Deadlines -->
-                <section class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4">Upcoming Deadlines</h2>
-                    <ul id="deadlinesList" class="list-disc list-inside space-y-2">
-                        <!-- Deadlines will be populated by JavaScript -->
-                    </ul>
-                </section>
+                    <!-- Upcoming Deadlines -->
+                    <section class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-600">Upcoming Deadlines</h2>
+                        <ul id="deadlinesList" class="list-disc list-inside space-y-2">
+                            <!-- Deadlines will be populated by JavaScript -->
+                        </ul>
+                    </section>
 
-                <!-- Opportunity Search -->
-                <section class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4">Opportunity Search (sam.gov)</h2>
-                    <form id="opportunitySearchForm" class="space-y-4">
-                        <input type="text" id="searchKeywords" placeholder="Keywords (e.g., SBIR, AI, sensor)" class="w-full p-2 border rounded-md">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="searchPostedFrom" class="block text-sm font-medium text-gray-700">Posted From:</label>
-                                <input type="date" id="searchPostedFrom" class="w-full p-2 border rounded-md">
+                    <!-- Combined Search and Profile Section -->
+                    <section class="bg-white rounded-lg shadow-md">
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex" aria-label="Tabs">
+                                <button id="tab-search" class="tab-btn active w-1/2 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                                    Opportunity Search
+                                </button>
+                                <button id="tab-profile" class="tab-btn w-1/2 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                                    Research Profile
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Search Tab Content -->
+                        <div id="content-search" class="p-6">
+                            <h2 class="text-2xl font-semibold mb-4 text-gray-600">Opportunity Search (sam.gov)</h2>
+                            <form id="opportunitySearchForm" class="space-y-4">
+                                <input type="text" id="searchKeywords" placeholder="Keywords (e.g., SBIR, AI, sensor)" class="w-full p-2 border rounded-md">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="searchPostedFrom" class="block text-sm font-medium text-gray-700">Posted From:</label>
+                                        <input type="date" id="searchPostedFrom" class="w-full p-2 border rounded-md">
+                                    </div>
+                                    <div>
+                                        <label for="searchPostedTo" class="block text-sm font-medium text-gray-700">Posted To:</label>
+                                        <input type="date" id="searchPostedTo" class="w-full p-2 border rounded-md">
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                                    Search for Opportunities
+                                </button>
+                            </form>
+                            <div id="opportunityResults" class="mt-6">
+                                <!-- Search results will be populated here -->
                             </div>
-                            <div>
-                                <label for="searchPostedTo" class="block text-sm font-medium text-gray-700">Posted To:</label>
-                                <input type="date" id="searchPostedTo" class="w-full p-2 border rounded-md">
+                        </div>
+
+                        <!-- Profile Tab Content -->
+                        <div id="content-profile" class="p-6 hidden">
+                            <h2 class="text-2xl font-semibold mb-4 text-gray-600">Research Profile</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="capabilities" class="block text-sm font-medium text-gray-700">Core Capabilities</label>
+                                    <textarea id="capabilities" rows="4" class="w-full p-2 border rounded-md" placeholder="Enter your team's core technical capabilities, skills, and resources..."></textarea>
+                                </div>
+                                <div>
+                                    <label for="topics" class="block text-sm font-medium text-gray-700">Research Topics of Interest</label>
+                                    <textarea id="topics" rows="4" class="w-full p-2 border rounded-md" placeholder="Enter keywords, domains, and specific research topics of interest..."></textarea>
+                                </div>
+                                <button id="saveProfileBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                                    Save Profile
+                                </button>
+                                <div id="profileSaveStatus" class="text-center text-sm text-green-600 h-4"></div>
                             </div>
                         </div>
-                        <button type="submit" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
-                            Search for Opportunities
-                        </button>
-                    </form>
-                    <div id="opportunityResults" class="mt-6">
-                        <!-- Search results will be populated here -->
-                    </div>
-                </section>
+                    </section>
+                </div>
 
-                <!-- Research Profile -->
-                <section class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4">Research Profile</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="capabilities" class="block text-sm font-medium text-gray-700">Core Capabilities</label>
-                            <textarea id="capabilities" rows="4" class="w-full p-2 border rounded-md" placeholder="Enter your team's core technical capabilities, skills, and resources..."></textarea>
-                        </div>
-                        <div>
-                            <label for="topics" class="block text-sm font-medium text-gray-700">Research Topics of Interest</label>
-                            <textarea id="topics" rows="4" class="w-full p-2 border rounded-md" placeholder="Enter keywords, domains, and specific research topics of interest..."></textarea>
-                        </div>
-                        <button id="saveProfileBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
-                            Save Profile
-                        </button>
-                        <div id="profileSaveStatus" class="text-center text-sm text-green-600 h-4"></div>
-                    </div>
-                </section>
-            </div>
+                <!-- Right Column: Reporting, Chatbot, and Documents -->
+                <div class="space-y-8">
+                    <!-- Document Store -->
+                    <section class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-600">Document Store</h2>
+                        <form id="uploadForm" class="space-y-4">
+                            <div>
+                                <label for="fileInput" class="block text-sm font-medium text-gray-700">Select a file to upload:</label>
+                                <input type="file" id="fileInput" name="file" class="mt-1 block w-full text-sm text-gray-500
+                                    file:mr-4 file:py-2 file:px-4
+                                    file:rounded-full file:border-0
+                                    file:text-sm file:font-semibold
+                                    file:bg-indigo-50 file:text-indigo-700
+                                    hover:file:bg-indigo-100"/>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                                Upload Document
+                            </button>
+                        </form>
+                        <div id="uploadStatus" class="mt-4 text-sm"></div>
+                        <hr class="my-6">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-600">Uploaded Documents</h3>
+                        <ul id="documentList" class="list-disc list-inside space-y-2">
+                            <!-- Document list will be populated by JavaScript -->
+                        </ul>
+                    </section>
 
-            <!-- Right Column: Reporting, Chatbot, and Documents -->
-            <div class="space-y-8">
-                <!-- Document Store -->
-                <section class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4">Document Store</h2>
-                    <form id="uploadForm" class="space-y-4">
-                        <div>
-                            <label for="fileInput" class="block text-sm font-medium text-gray-700">Select a file to upload:</label>
-                            <input type="file" id="fileInput" name="file" class="mt-1 block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100"/>
+                    <!-- AI Reporting Assistant -->
+                    <section class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-semibold text-gray-600">AI Reporting Assistant</h2>
+                            <div>
+                                <select id="reportExpertSelect" class="p-1 border rounded-md text-sm"></select>
+                                <span id="saveStatus" class="text-sm text-green-600 mx-4"></span>
+                                <button id="saveReportBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1 px-3 rounded text-sm transition-all hover:shadow-md">
+                                    Save
+                                </button>
+                            </div>
                         </div>
-                        <button type="submit" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
-                            Upload Document
+                        <textarea id="reportInput" class="w-full h-40 p-2 border rounded-md" placeholder="Enter your accomplishments and data for the reporting period..."></textarea>
+                        <button id="generateReportBtn" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                            Generate Report Draft
                         </button>
-                    </form>
-                    <div id="uploadStatus" class="mt-4 text-sm"></div>
-                    <hr class="my-6">
-                    <h3 class="text-xl font-semibold mb-4">Uploaded Documents</h3>
-                    <ul id="documentList" class="list-disc list-inside space-y-2">
-                        <!-- Document list will be populated by JavaScript -->
-                    </ul>
-                </section>
+                        <div id="reportOutput" class="mt-4 p-4 bg-gray-50 rounded-md border hidden">
+                            <!-- Generated report will appear here -->
+                        </div>
+                    </section>
 
-                <!-- AI Reporting Assistant -->
-                <section class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-semibold">AI Reporting Assistant</h2>
-                        <div>
-                            <select id="reportExpertSelect" class="p-1 border rounded-md text-sm"></select>
-                            <span id="saveStatus" class="text-sm text-green-600 mx-4"></span>
-                            <button id="saveReportBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1 px-3 rounded text-sm transition-all hover:shadow-md">
-                                Save
+                    <!-- Compliance Chatbot -->
+                    <section class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-semibold text-gray-600">Compliance Chatbot</h2>
+                            <select id="chatExpertSelect" class="p-1 border rounded-md text-sm"></select>
+                        </div>
+                        <div id="chatHistory" class="h-64 border rounded-md p-4 overflow-y-auto bg-gray-50 mb-4">
+                            <!-- Chat messages will appear here -->
+                        </div>
+                        <div class="flex">
+                            <input type="text" id="chatInput" class="flex-grow p-2 border rounded-l-md" placeholder="Ask a question about SBIR rules...">
+                            <button id="chatSendBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-r-md transition-all hover:shadow-lg transform hover:-translate-y-px">
+                                Send
                             </button>
                         </div>
+                    </section>
                     </div>
-                    <textarea id="reportInput" class="w-full h-40 p-2 border rounded-md" placeholder="Enter your accomplishments and data for the reporting period..."></textarea>
-                    <button id="generateReportBtn" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
-                        Generate Report Draft
-                    </button>
-                    <div id="reportOutput" class="mt-4 p-4 bg-gray-50 rounded-md border hidden">
-                        <!-- Generated report will appear here -->
-                    </div>
-                </section>
-
-                <!-- Compliance Chatbot -->
-                <section class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-semibold">Compliance Chatbot</h2>
-                        <select id="chatExpertSelect" class="p-1 border rounded-md text-sm"></select>
-                    </div>
-                    <div id="chatHistory" class="h-64 border rounded-md p-4 overflow-y-auto bg-gray-50 mb-4">
-                        <!-- Chat messages will appear here -->
-                    </div>
-                    <div class="flex">
-                        <input type="text" id="chatInput" class="flex-grow p-2 border rounded-l-md" placeholder="Ask a question about SBIR rules...">
-                        <button id="chatSendBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-r-md transition-all hover:shadow-lg transform hover:-translate-y-px">
-                            Send
-                        </button>
-                    </div>
-                </section>
                 </div>
-            </div>
         </main>
     </div>
+
+    <footer class="text-center p-4 bg-gray-200 text-gray-600 text-sm">
+        <p>SBIR Grant Agent - &copy; 2024. Licensed under GPLv3.</p>
+    </footer>
 
     <!-- Modal for Application Draft -->
     <div id="draftModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
@@ -670,6 +700,30 @@
             });
         }
 
+        function setupTabs() {
+            const tabButtons = {
+                search: document.getElementById('tab-search'),
+                profile: document.getElementById('tab-profile')
+            };
+            const tabContents = {
+                search: document.getElementById('content-search'),
+                profile: document.getElementById('content-profile')
+            };
+
+            const switchTab = (tabName) => {
+                // Update button styles
+                Object.values(tabButtons).forEach(btn => btn.classList.remove('active'));
+                tabButtons[tabName].classList.add('active');
+
+                // Update content visibility
+                Object.values(tabContents).forEach(content => content.classList.add('hidden'));
+                tabContents[tabName].classList.remove('hidden');
+            };
+
+            tabButtons.search.addEventListener('click', () => switchTab('search'));
+            tabButtons.profile.addEventListener('click', () => switchTab('profile'));
+        }
+
         // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', async () => {
             await loadExperts();
@@ -682,6 +736,7 @@
             setupResearchProfile(appState.researchProfile);
             setupDraftModal();
             setupFlaggedOpportunities(appState.matchedOpportunities);
+            setupTabs();
         });
     </script>
 
