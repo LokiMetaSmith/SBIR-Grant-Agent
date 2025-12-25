@@ -1,6 +1,6 @@
-# SBIR Grant Agent
+# Non-Profit Grant Agent
 
-This project is a web-based, AI-powered dashboard designed to help small businesses manage their SBIR (Small Business Innovation Research) government grants. It automates and assists with opportunity discovery, application drafting, reporting, and compliance.
+This project is a web-based, AI-powered dashboard designed to help non-profits manage their government grants. It automates and assists with opportunity discovery, application drafting, reporting, and compliance.
 
 ## Features
 *   **Automated Grant Matching:** A background agent runs daily to search for new grant opportunities on `sam.gov`. It uses an LLM to compare opportunities against your company's research profile and flags the most relevant ones for your review.
@@ -8,7 +8,7 @@ This project is a web-based, AI-powered dashboard designed to help small busines
 *   **Automated Application Drafting:** For any grant opportunity, click "Draft Application" to have an LLM generate a high-quality initial draft based on the opportunity's requirements and your saved research profile.
 *   **Mixture of Experts (MoE) LLM Integration:** Configure and connect multiple LLMs (e.g., from OpenAI, Anthropic, Cohere). You can select which "expert" model to use for different tasks like drafting applications or answering compliance questions.
 *   **AI Reporting Assistant:** Generate drafts for your quarterly and final reports by providing key data points and accomplishments.
-*   **Compliance Chatbot:** Get real-time answers to your questions about SBIR rules and regulations.
+*   **Compliance Chatbot:** Get real-time answers to your questions about grant rules and regulations.
 *   **Document Store:** Upload and manage important grant-related documents directly within the application.
 *   **Data Persistence:** Your application state, including uploaded documents, chat history, and research profile, is automatically saved to the server.
 

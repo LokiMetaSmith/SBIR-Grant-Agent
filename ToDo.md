@@ -1,6 +1,6 @@
 # Project ToDo and Research Plan
 
-This document outlines the future work and research plan for the SBIR Grant Agent application.
+This document outlines the future work and research plan for the Non-Profit Grant Agent application.
 
 ---
 

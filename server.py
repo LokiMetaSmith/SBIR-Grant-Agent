@@ -42,7 +42,8 @@ def match_opportunities_job():
         postedTo = datetime.now().strftime('%m/%d/%Y')
         postedFrom = (datetime.now() - timedelta(days=7)).strftime('%m/%d/%Y')
 
-        params = {"api_key": sam_api_key, "limit": 100, "postedFrom": postedFrom, "postedTo": postedTo, "title": "SBIR"}
+        search_keywords = profile.get("keywords", "Grant")
+        params = {"api_key": sam_api_key, "limit": 100, "postedFrom": postedFrom, "postedTo": postedTo, "title": search_keywords}
         try:
             response = requests.get("https://api.sam.gov/opportunities/v2/search", params=params, timeout=30)
             response.raise_for_status()
@@ -199,7 +200,7 @@ def organization_details():
 @app.route('/api/search_opportunities', methods=['POST'])
 def search_opportunities():
     if os.getenv("TEST_MODE") == "true":
-        return jsonify([{"title": "Test SBIR Opportunity", "fullParentPathName": "Test Agency", "solicitationNumber": "TEST-123", "postedDate": "2025-09-25", "description": "This is a test opportunity for drafting.", "uiLink": "http://example.com"}])
+        return jsonify([{"title": "Test Grant Opportunity", "fullParentPathName": "Test Agency", "solicitationNumber": "TEST-123", "postedDate": "2025-09-25", "description": "This is a test opportunity for drafting.", "uiLink": "http://example.com"}])
     sam_api_key = os.getenv("SAM_API_KEY")
     if not sam_api_key:
         return jsonify({"error": "SAM.gov API key is not configured on the server."}), 500

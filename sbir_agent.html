@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SBIR Grant Agent</title>
+    <title>Non-Profit Grant Agent</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -38,7 +38,7 @@
 
     <div class="container mx-auto p-8 flex-grow">
         <header class="mb-8">
-            <h1 class="text-4xl font-bold text-center text-gray-700">SBIR Grant Management Dashboard</h1>
+            <h1 class="text-4xl font-bold text-center text-gray-700">Non-Profit Grant Management Dashboard</h1>
         </header>
 
         <main class="space-y-8">
@@ -108,6 +108,10 @@
                         <div id="content-profile" class="p-6 hidden">
                             <h2 class="text-2xl font-semibold mb-4 text-gray-600">Research Profile</h2>
                             <div class="space-y-4">
+                                <div>
+                                    <label for="profileKeywords" class="block text-sm font-medium text-gray-700">Search Keywords (for automated matching)</label>
+                                    <input type="text" id="profileKeywords" class="w-full p-2 border rounded-md" placeholder="e.g., Non-profit, Education, Healthcare, Environment">
+                                </div>
                                 <div>
                                     <label for="capabilities" class="block text-sm font-medium text-gray-700">Core Capabilities</label>
                                     <textarea id="capabilities" rows="4" class="w-full p-2 border rounded-md" placeholder="Enter your team's core technical capabilities, skills, and resources..."></textarea>
@@ -183,7 +187,7 @@
                             <!-- Chat messages will appear here -->
                         </div>
                         <div class="flex">
-                            <input type="text" id="chatInput" class="flex-grow p-2 border rounded-l-md" placeholder="Ask a question about SBIR rules...">
+                            <input type="text" id="chatInput" class="flex-grow p-2 border rounded-l-md" placeholder="Ask a question about grant rules...">
                             <button id="chatSendBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-r-md transition-all hover:shadow-lg transform hover:-translate-y-px">
                                 Send
                             </button>
@@ -195,7 +199,7 @@
     </div>
 
     <footer class="text-center p-4 bg-gray-200 text-gray-600 text-sm">
-        <p>SBIR Grant Agent - &copy; 2024. Licensed under GPLv3.</p>
+        <p>Non-Profit Grant Agent - &copy; 2024. Licensed under GPLv3.</p>
     </footer>
 
     <!-- Modal for Application Draft -->
@@ -281,6 +285,7 @@
             appState.reportText = document.getElementById('reportInput').value;
             appState.researchProfile.capabilities = document.getElementById('capabilities').value;
             appState.researchProfile.topics = document.getElementById('topics').value;
+            appState.researchProfile.keywords = document.getElementById('profileKeywords').value;
 
             const statusEl = document.getElementById(statusElementId);
 
@@ -374,7 +379,7 @@
                 reportOutput.innerHTML = '<div class="spinner mx-auto"></div>';
                 reportOutput.classList.remove('hidden');
 
-                const systemPrompt = `You are an AI assistant specialized in generating sections for U.S. Small Business Innovation Research (SBIR) grant reports. Your task is to take the user's raw notes and accomplishments and format them into a professional, well-structured report section. The tone should be formal and objective. Focus on clearly presenting the technical progress and outcomes.`;
+                const systemPrompt = `You are an AI assistant specialized in generating sections for non-profit grant reports. Your task is to take the user's raw notes and accomplishments and format them into a professional, well-structured report section. The tone should be formal and objective. Focus on clearly presenting the technical progress and outcomes.`;
                 const messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: accomplishments }];
 
                 try {
@@ -430,7 +435,7 @@
                 chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
 
                 const conversationHistory = [
-                    { role: 'system', content: 'You are an expert assistant for U.S. Small Business Innovation Research (SBIR) grants...' },
+                    { role: 'system', content: 'You are an expert assistant for non-profit grants...' },
                     ...appState.chatHistory
                 ];
 
@@ -535,11 +540,13 @@
         function setupResearchProfile(profile) {
             const capabilitiesInput = document.getElementById('capabilities');
             const topicsInput = document.getElementById('topics');
+            const keywordsInput = document.getElementById('profileKeywords');
             const saveBtn = document.getElementById('saveProfileBtn');
 
             if (profile) {
                 capabilitiesInput.value = profile.capabilities || '';
                 topicsInput.value = profile.topics || '';
+                keywordsInput.value = profile.keywords || '';
             }
 
             saveBtn.addEventListener('click', () => saveApplicationData('profileSaveStatus'));
