@@ -34,7 +34,40 @@ Based on the research of available APIs, the following features can be implement
 
 ---
 
-## 2. Research Plan for Project Architecture
+## 2. Future Feature Roadmap (Based on Research)
+
+The following features have been identified as valuable additions to standard non-profit grant management software and should be considered for future development.
+
+### Feature 4: Workflow Automation & Deadline Management
+- **Description:** Implement automated reminders for upcoming deadlines (reporting, application submission, renewal).
+- **Activities:**
+    - Integrate an email notification system (e.g., SendGrid or SMTP).
+    - Enhance the scheduler to check for deadlines and send alerts.
+    - Create a calendar view in the frontend to visualize deadlines.
+
+### Feature 5: Comprehensive Budget Management
+- **Description:** Expand the "Budget Overview" to support detailed expense tracking, budget vs. actuals reporting, and multi-grant budget management.
+- **Activities:**
+    - Create a data model for line-item expenses.
+    - Update the UI to allow adding/editing expenses.
+    - Generate detailed financial reports (leveraging the Reporting Assistant).
+
+### Feature 6: Collaboration Tools
+- **Description:** Enable multiple users to collaborate on grant applications and reports.
+- **Activities:**
+    - Implement user authentication and role-based access control.
+    - Add real-time or near real-time notes/comments on drafts.
+    - Create a shared "Team Profile" vs individual user profiles.
+
+### Feature 7: Integrations
+- **Description:** Connect with external tools used by non-profits.
+- **Activities:**
+    - Investigate integrations with common CRMs (e.g., Salesforce, HubSpot) for donor/funder management.
+    - Investigate integrations with accounting software (e.g., QuickBooks, Xero).
+
+---
+
+## 3. Research Plan for Project Architecture
 
 This section outlines a plan to evaluate and potentially refactor the project's architecture to support future growth and maintainability.
 
