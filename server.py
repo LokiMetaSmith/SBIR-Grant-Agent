@@ -42,7 +42,8 @@ def match_opportunities_job():
         postedTo = datetime.now().strftime('%m/%d/%Y')
         postedFrom = (datetime.now() - timedelta(days=7)).strftime('%m/%d/%Y')
 
-        params = {"api_key": sam_api_key, "limit": 100, "postedFrom": postedFrom, "postedTo": postedTo, "title": "SBIR"}
+        search_keywords = profile.get("keywords", "Grant")
+        params = {"api_key": sam_api_key, "limit": 100, "postedFrom": postedFrom, "postedTo": postedTo, "title": search_keywords}
         try:
             response = requests.get("https://api.sam.gov/opportunities/v2/search", params=params, timeout=30)
             response.raise_for_status()
@@ -155,10 +156,51 @@ def index():
 def get_experts():
     return jsonify(list(EXPERTS.keys()))
 
+@app.route('/api/organization_details', methods=['POST'])
+def organization_details():
+    if os.getenv("TEST_MODE") == "true":
+        return jsonify({
+            "fhorgname": "Test Agency",
+            "fhorgtype": "Department/Ind. Agency",
+            "status": "ACTIVE",
+            "description": "This is a mock organization for testing purposes.",
+            "links": [{"rel": "self", "href": "http://example.com"}]
+        })
+
+    sam_api_key = os.getenv("SAM_API_KEY")
+    if not sam_api_key:
+        return jsonify({"error": "SAM.gov API key is not configured on the server."}), 500
+
+    data = request.get_json()
+    org_name = data.get('keywords', '')
+
+    if not org_name:
+         return jsonify({"error": "Organization name (keywords) is required."}), 400
+
+    params = {
+        "api_key": sam_api_key,
+        "fhorgname": org_name,
+        "limit": 1
+    }
+
+    try:
+        response = requests.get("https://api.sam.gov/prod/federalorganizations/v1/orgs", params=params, timeout=30)
+        response.raise_for_status()
+        org_list = response.json().get("orglist", [])
+        if org_list:
+             return jsonify(org_list[0])
+        else:
+             return jsonify({"error": "Organization not found."}), 404
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to connect to the SAM.gov Federal Hierarchy API: {e}"}), 502
+    except Exception as e:
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
 @app.route('/api/search_opportunities', methods=['POST'])
 def search_opportunities():
     if os.getenv("TEST_MODE") == "true":
-        return jsonify([{"title": "Test SBIR Opportunity", "fullParentPathName": "Test Agency", "solicitationNumber": "TEST-123", "postedDate": "2025-09-25", "description": "This is a test opportunity for drafting.", "uiLink": "http://example.com"}])
+        return jsonify([{"title": "Test Grant Opportunity", "fullParentPathName": "Test Agency", "solicitationNumber": "TEST-123", "postedDate": "2025-09-25", "description": "This is a test opportunity for drafting.", "uiLink": "http://example.com"}])
     sam_api_key = os.getenv("SAM_API_KEY")
     if not sam_api_key:
         return jsonify({"error": "SAM.gov API key is not configured on the server."}), 500
