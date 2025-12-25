@@ -8,22 +8,22 @@ This document outlines the future work and research plan for the SBIR Grant Agen
 
 Based on the research of available APIs, the following features can be implemented to enhance the application.
 
-### Feature 1: Grant Opportunity Search (In Progress)
+### Feature 1: Grant Opportunity Search (Completed)
 - **Description:** Allow users to search for grant opportunities directly from the application.
 - **API Used:** `SAM.gov Get Opportunities Public API`
 - **Implementation:**
     - [x] Add `SAM_API_KEY` to `.env` configuration.
     - [x] Create a backend endpoint (`/api/search_opportunities`) to securely query the API.
     - [x] Create a frontend UI with search inputs and a results display area.
-    - [ ] **Next:** Verify and finalize this feature.
+    - [x] Verify and finalize this feature.
 
-### Feature 2: Organization Details Lookup
+### Feature 2: Organization Details Lookup (Completed)
 - **Description:** In the opportunity search results, provide a "Details" button for each organization (awarding agency, etc.) that, when clicked, fetches and displays more information about that entity.
 - **APIs Used:** `SAM.gov Entity Management API` and `SAM.gov Federal Hierarchy Public API`.
 - **Implementation:**
-    - Add a new backend endpoint (e.g., `/api/organization_details`).
-    - This endpoint will take an organization identifier and query the relevant `sam.gov` API.
-    - Update the frontend to include the "Details" button and a modal or panel to display the fetched information.
+    - [x] Add a new backend endpoint (e.g., `/api/organization_details`).
+    - [x] This endpoint will take an organization identifier and query the relevant `sam.gov` API.
+    - [x] Update the frontend to include the "Details" button and a modal or panel to display the fetched information.
 
 ### Feature 3: Product Service Code (PSC) Explorer
 - **Description:** Add a tool that allows users to search for PSC codes by keyword or to look up the meaning of a specific PSC code. This helps users find relevant opportunities.
