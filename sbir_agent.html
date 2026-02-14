@@ -71,11 +71,14 @@
                     <section class="bg-white rounded-lg shadow-md">
                         <div class="border-b border-gray-200">
                             <nav class="-mb-px flex" aria-label="Tabs">
-                                <button id="tab-search" class="tab-btn active w-1/2 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                                <button id="tab-search" class="tab-btn active w-1/3 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
                                     Opportunity Search
                                 </button>
-                                <button id="tab-profile" class="tab-btn w-1/2 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                                <button id="tab-profile" class="tab-btn w-1/3 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
                                     Research Profile
+                                </button>
+                                <button id="tab-psc" class="tab-btn w-1/3 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                                    PSC Explorer
                                 </button>
                             </nav>
                         </div>
@@ -124,6 +127,34 @@
                                     Save Profile
                                 </button>
                                 <div id="profileSaveStatus" class="text-center text-sm text-green-600 h-4"></div>
+                            </div>
+                        </div>
+
+                        <!-- PSC Explorer Tab Content -->
+                        <div id="content-psc" class="p-6 hidden">
+                            <h2 class="text-2xl font-semibold mb-4 text-gray-600">Product Service Code (PSC) Explorer</h2>
+                            <form id="pscSearchForm" class="space-y-4">
+                                <div class="flex space-x-4">
+                                    <input type="text" id="pscSearchQuery" placeholder="Search by Code or Keyword (e.g., 1510, Aircraft)" class="w-full p-2 border rounded-md">
+                                    <select id="pscSearchBy" class="p-2 border rounded-md hidden">
+                                        <option value="">All</option>
+                                        <option value="group">Group</option>
+                                        <option value="parentpsc">Parent PSC</option>
+                                        <option value="psc">PSC Code</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <label class="inline-flex items-center">
+                                        <input type="checkbox" id="pscActiveOnly" class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                        <span class="ml-2 text-gray-700">Active Only</span>
+                                    </label>
+                                </div>
+                                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                                    Search PSC Codes
+                                </button>
+                            </form>
+                            <div id="pscResults" class="mt-6">
+                                <!-- PSC search results will be populated here -->
                             </div>
                         </div>
                     </section>
@@ -783,14 +814,111 @@
             });
         }
 
+        function setupPSCExplorer() {
+            const searchForm = document.getElementById('pscSearchForm');
+            const searchInput = document.getElementById('pscSearchQuery');
+            const activeOnlyCheckbox = document.getElementById('pscActiveOnly');
+            const resultsDiv = document.getElementById('pscResults');
+
+            searchForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                const active = activeOnlyCheckbox.checked ? 'Y' : 'ALL';
+
+                if (!query) {
+                    resultsDiv.innerHTML = `<p class="text-red-500">Please enter a search term.</p>`;
+                    return;
+                }
+
+                resultsDiv.innerHTML = '<div class="spinner mx-auto"></div>';
+
+                try {
+                    const response = await fetch('/api/psc', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            q: query,
+                            active: active
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Failed to fetch PSC codes.');
+
+                    resultsDiv.innerHTML = '';
+                    if (!data.productServiceCodeList || data.productServiceCodeList.length === 0) {
+                        resultsDiv.innerHTML = '<p>No PSC codes found.</p>';
+                        return;
+                    }
+
+                    const table = document.createElement('table');
+                    table.className = 'min-w-full leading-normal';
+                    table.innerHTML = `
+                        <thead>
+                            <tr>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Code
+                                </th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Name
+                                </th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Start Date
+                                </th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    End Date
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    `;
+                    const tbody = table.querySelector('tbody');
+                    data.productServiceCodeList.forEach(psc => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap font-bold">${psc.pscCode}</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">${psc.pscName}</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <span class="relative inline-block px-3 py-1 font-semibold text-${psc.activeInd === 'Y' ? 'green' : 'red'}-900 leading-tight">
+                                    <span aria-hidden class="absolute inset-0 bg-${psc.activeInd === 'Y' ? 'green' : 'red'}-200 opacity-50 rounded-full"></span>
+                                    <span class="relative">${psc.activeInd === 'Y' ? 'Active' : 'Inactive'}</span>
+                                </span>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">${psc.activeStartDate || '-'}</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">${psc.activeEndDate || '-'}</p>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    resultsDiv.appendChild(table);
+
+                } catch (error) {
+                    resultsDiv.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+                }
+            });
+        }
+
         function setupTabs() {
             const tabButtons = {
                 search: document.getElementById('tab-search'),
-                profile: document.getElementById('tab-profile')
+                profile: document.getElementById('tab-profile'),
+                psc: document.getElementById('tab-psc')
             };
             const tabContents = {
                 search: document.getElementById('content-search'),
-                profile: document.getElementById('content-profile')
+                profile: document.getElementById('content-profile'),
+                psc: document.getElementById('content-psc')
             };
 
             const switchTab = (tabName) => {
@@ -805,6 +933,7 @@
 
             tabButtons.search.addEventListener('click', () => switchTab('search'));
             tabButtons.profile.addEventListener('click', () => switchTab('profile'));
+            tabButtons.psc.addEventListener('click', () => switchTab('psc'));
         }
 
         // --- App Initialization ---
@@ -816,6 +945,7 @@
             setupChatbot(appState.chatHistory, appState.experts);
             setupDocumentStore(appState.documents);
             setupOpportunitySearch();
+            setupPSCExplorer();
             setupResearchProfile(appState.researchProfile);
             setupDraftModal();
             setupOrgDetailsModal();
