@@ -98,3 +98,17 @@ This section outlines a plan to evaluate and potentially refactor the project's 
 - **Goal:** Synthesize all findings into a final architecture proposal.
 - **Activities:**
     - Create a document outlining the recommended architecture, including technology choices, project structure, and a proposed roadmap for the refactoring effort.
+
+---
+
+## 4. Testing, Benchmarks, and Experiments Refactoring
+
+During code review, a few areas of 'lazy code' were identified in the project's testing, benchmarking, and experimental setup that do not perform the function their name suggests. These areas need improvement:
+
+### Area 1: `verify_final_ux.py` (End-to-End Testing)
+- **Issue:** The script is named `verify_final_ux.py` but is a very 'lazy' test. It only verifies that a few tabs can be clicked and checks the text of the footer. Furthermore, it expects the outdated title 'SBIR Grant Agent' instead of the current 'Non-Profit Grant Agent', causing it to fail completely. It does not actually verify the 'final UX' of the application (e.g., searching, generating reports, saving profiles, or uploading documents).
+- **Improvement:** Refactor `verify_final_ux.py` to actually test the core user flows of the application (e.g., successfully submitting a search form, interacting with the AI Reporting Assistant, saving a research profile, and verifying the expected DOM updates). Update all outdated text assertions to match the current application state.
+
+### Area 2: Hardcoded Test Routes and `TEST_MODE` in `server.py`
+- **Issue:** The backend `server.py` contains production routes like `/api/test_match_job` and `/api/mock_llm` explicitly designated as 'Test-only Endpoints', and it litters production logic with `if os.getenv("TEST_MODE") == "true":` to return mock data (e.g., in `/api/organization_details` and `/api/search_opportunities`). This is a lazy testing/experimentation approach that mixes test stubs into production code.
+- **Improvement:** Remove `TEST_MODE` blocks and 'Test-only Endpoints' from the main `server.py`. Introduce a proper testing framework (like `pytest`) and use dedicated mocking libraries (like `unittest.mock` or `responses`) to intercept API calls during testing. If experimental test endpoints are needed for local development, isolate them in a separate test server file or use Flask Blueprints loaded conditionally.
