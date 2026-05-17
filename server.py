@@ -200,7 +200,13 @@ def draft_application():
     expert = EXPERTS.get(data['expert'])
     if not expert:
         return jsonify({"error": f"Expert '{data['expert']}' not found."}), 404
-    prompt = f"You are a professional grant writer... Capabilities: {data['profile'].get('capabilities', 'N/A')}... Opportunity: {data['opportunity'].get('title', 'N/A')}..."
+
+    proposal_type = data.get('proposalType', 'Standard Grant')
+    if proposal_type == 'OTA/Milestone-Driven':
+        prompt = f"You are a professional grant writer specializing in Other Transactions Agreements (OTA). Draft a proposal focusing on Milestone-Driven Execution, Technology De-risking, technical architecture, and Advanced Tooling... Capabilities: {data['profile'].get('capabilities', 'N/A')}... Opportunity: {data['opportunity'].get('title', 'N/A')}..."
+    else:
+        prompt = f"You are a professional grant writer... Capabilities: {data['profile'].get('capabilities', 'N/A')}... Opportunity: {data['opportunity'].get('title', 'N/A')}..."
+
     messages = [{"role": "system", "content": prompt}]
     payload = {"model": expert["model_name"], "messages": messages}
     headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {expert["api_key"]}'}
@@ -236,7 +242,7 @@ def load_data():
             with open(DATA_FILE, 'r') as f:
                 return jsonify(json.load(f))
         else:
-            return jsonify({"budget": {}, "deadlines": [], "reportText": "", "chatHistory": [], "documents": [], "researchProfile": {}, "matchedOpportunities": []})
+            return jsonify({"budget": {}, "deadlines": [], "reportText": "", "chatHistory": [], "documents": [], "researchProfile": {}, "matchedOpportunities": [], "otaMilestones": []})
     except Exception as e:
         return jsonify({"error": "Could not load data."}), 500
 
