@@ -37,7 +37,7 @@ def run(playwright: Playwright) -> None:
     page.goto("http://127.0.0.1:5000/sbir_agent.html")
 
     # Expect a title "to contain" a substring.
-    expect(page).to_have_title(re.compile("Non-Profit Grant Agent"))
+    expect(page).to_have_title(re.compile("Grant Management Dashboard"))
 
     # 1. Verify the tabbed interface
     search_tab = page.locator("#tab-search")
@@ -86,7 +86,7 @@ def run(playwright: Playwright) -> None:
     # 5. Verify the footer is present
     footer = page.locator("footer")
     expect(footer).to_be_visible()
-    expect(footer).to_contain_text("Non-Profit Grant Agent - © 2024. Licensed under GPLv3.")
+    expect(footer).to_contain_text("Grant Management Dashboard - © 2024. Licensed under GPLv3.")
 
     # 6. Take a screenshot of the final state
     page.screenshot(path="final_ux_screenshot.png")

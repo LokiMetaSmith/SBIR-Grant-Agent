@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Non-Profit Grant Agent</title>
+    <title>Grant Management Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -38,7 +38,7 @@
 
     <div class="container mx-auto p-8 flex-grow">
         <header class="mb-8">
-            <h1 class="text-4xl font-bold text-center text-gray-700">Non-Profit Grant Management Dashboard</h1>
+            <h1 class="text-4xl font-bold text-center text-gray-700">Grant Management Dashboard</h1>
         </header>
 
         <main class="space-y-8">
@@ -160,12 +160,47 @@
                             <div id="opportunityResults" class="mt-6">
                                 <!-- Search results will be populated here -->
                             </div>
+
+                            <hr class="my-6">
+                            <h3 class="text-xl font-semibold mb-4 text-gray-600">Manual Opportunity Entry</h3>
+                            <p class="text-sm text-gray-500 mb-4">Add opportunities from foundations, NGOs, or other non-SAM.gov sources to track them and draft proposals.</p>
+                            <form id="manualOpportunityForm" class="space-y-4">
+                                <div>
+                                    <label for="manualTitle" class="block text-sm font-medium text-gray-700">Opportunity Title:</label>
+                                    <input type="text" id="manualTitle" class="w-full p-2 border rounded-md" required>
+                                </div>
+                                <div>
+                                    <label for="manualAgency" class="block text-sm font-medium text-gray-700">Source/Agency/Foundation:</label>
+                                    <input type="text" id="manualAgency" class="w-full p-2 border rounded-md" required>
+                                </div>
+                                <div>
+                                    <label for="manualDescription" class="block text-sm font-medium text-gray-700">Description / Key Details:</label>
+                                    <textarea id="manualDescription" rows="3" class="w-full p-2 border rounded-md" required></textarea>
+                                </div>
+                                <div>
+                                    <label for="manualLink" class="block text-sm font-medium text-gray-700">Link (URL):</label>
+                                    <input type="url" id="manualLink" class="w-full p-2 border rounded-md">
+                                </div>
+                                <button type="submit" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                                    Add Opportunity
+                                </button>
+                            </form>
                         </div>
 
                         <!-- Profile Tab Content -->
                         <div id="content-profile" class="p-6 hidden">
                             <h2 class="text-2xl font-semibold mb-4 text-gray-600">Research Profile</h2>
                             <div class="space-y-4">
+                                <div>
+                                    <label for="organizationType" class="block text-sm font-medium text-gray-700">Organization Type</label>
+                                    <select id="organizationType" class="w-full p-2 border rounded-md">
+                                        <option value="Non-Profit (501c3)">Non-Profit (501c3)</option>
+                                        <option value="For-Profit">For-Profit</option>
+                                        <option value="Academic Institution">Academic Institution</option>
+                                        <option value="NGO">NGO</option>
+                                        <option value="Individual/Researcher">Individual/Researcher</option>
+                                    </select>
+                                </div>
                                 <div>
                                     <label for="profileKeywords" class="block text-sm font-medium text-gray-700">Search Keywords (for automated matching)</label>
                                     <input type="text" id="profileKeywords" class="w-full p-2 border rounded-md" placeholder="e.g., Non-profit, Education, Healthcare, Environment">
@@ -257,7 +292,7 @@
     </div>
 
     <footer class="text-center p-4 bg-gray-200 text-gray-600 text-sm">
-        <p>Non-Profit Grant Agent - &copy; 2024. Licensed under GPLv3.</p>
+        <p>Grant Management Dashboard - &copy; 2024. Licensed under GPLv3.</p>
     </footer>
 
     <!-- Modal for Application Draft -->
@@ -345,6 +380,7 @@
             appState.researchProfile.capabilities = document.getElementById('capabilities').value;
             appState.researchProfile.topics = document.getElementById('topics').value;
             appState.researchProfile.keywords = document.getElementById('profileKeywords').value;
+            appState.researchProfile.organizationType = document.getElementById('organizationType').value;
 
             const statusEl = document.getElementById(statusElementId);
             if (!statusEl) return;
@@ -518,7 +554,7 @@
                 reportOutput.innerHTML = '<div class="spinner mx-auto"></div>';
                 reportOutput.classList.remove('hidden');
 
-                const systemPrompt = `You are an AI assistant specialized in generating sections for non-profit grant reports. Your task is to take the user's raw notes and accomplishments and format them into a professional, well-structured report section. The tone should be formal and objective. Focus on clearly presenting the technical progress and outcomes.`;
+                const systemPrompt = `You are an AI assistant specialized in generating sections for grant reports. Your task is to take the user's raw notes and accomplishments and format them into a professional, well-structured report section. The tone should be formal and objective. Focus on clearly presenting the technical progress and outcomes.`;
                 const messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: accomplishments }];
 
                 try {
@@ -574,7 +610,7 @@
                 chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
 
                 const conversationHistory = [
-                    { role: 'system', content: 'You are an expert assistant for non-profit grants...' },
+                    { role: 'system', content: 'You are an expert assistant for grants...' },
                     ...appState.chatHistory
                 ];
 
@@ -680,12 +716,14 @@
             const capabilitiesInput = document.getElementById('capabilities');
             const topicsInput = document.getElementById('topics');
             const keywordsInput = document.getElementById('profileKeywords');
+            const organizationTypeInput = document.getElementById('organizationType');
             const saveBtn = document.getElementById('saveProfileBtn');
 
             if (profile) {
                 capabilitiesInput.value = profile.capabilities || '';
                 topicsInput.value = profile.topics || '';
                 keywordsInput.value = profile.keywords || '';
+                organizationTypeInput.value = profile.organizationType || 'Non-Profit (501c3)';
             }
 
             saveBtn.addEventListener('click', () => saveApplicationData('profileSaveStatus'));
@@ -697,7 +735,37 @@
             const postedFromInput = document.getElementById('searchPostedFrom');
             const postedToInput = document.getElementById('searchPostedTo');
             const resultsDiv = document.getElementById('opportunityResults');
+            const manualForm = document.getElementById('manualOpportunityForm');
             let currentOpportunities = [];
+
+            manualForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newOpp = {
+                    title: document.getElementById('manualTitle').value,
+                    fullParentPathName: document.getElementById('manualAgency').value,
+                    description: document.getElementById('manualDescription').value,
+                    uiLink: document.getElementById('manualLink').value,
+                    noticeId: "manual-" + Date.now(),
+                    postedDate: new Date().toLocaleDateString('en-US')
+                };
+
+                const matchEntry = {
+                    opportunity: newOpp,
+                    match_analysis: {
+                        is_match: true,
+                        justification: "Manually added by user."
+                    },
+                    timestamp: new Date().toISOString()
+                };
+
+                appState.matchedOpportunities = appState.matchedOpportunities || [];
+                appState.matchedOpportunities.push(matchEntry);
+                await saveApplicationData();
+
+                setupFlaggedOpportunities(appState.matchedOpportunities);
+                manualForm.reset();
+                alert("Opportunity added successfully to 'Flagged for You'!");
+            });
 
             searchForm.addEventListener('submit', async (e) => {
                 e.preventDefault();

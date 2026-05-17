@@ -202,10 +202,27 @@ def draft_application():
         return jsonify({"error": f"Expert '{data['expert']}' not found."}), 404
 
     proposal_type = data.get('proposalType', 'Standard Grant')
-    if proposal_type == 'OTA/Milestone-Driven':
-        prompt = f"You are a professional grant writer specializing in Other Transactions Agreements (OTA). Draft a proposal focusing on Milestone-Driven Execution, Technology De-risking, technical architecture, and Advanced Tooling... Capabilities: {data['profile'].get('capabilities', 'N/A')}... Opportunity: {data['opportunity'].get('title', 'N/A')}..."
+    org_type = data['profile'].get('organizationType', 'Non-Profit (501c3)')
+
+    # Provide instructions to tailor based on organization type
+    org_type_instruction = ""
+    if org_type == "Non-Profit (501c3)":
+        org_type_instruction = "Tailor the proposal to highlight public benefit, community impact, and alignment with non-profit missions."
+    elif org_type == "For-Profit":
+        org_type_instruction = "Tailor the proposal to highlight return on investment (ROI), commercialization potential, and economic impact."
+    elif org_type == "Academic Institution":
+        org_type_instruction = "Tailor the proposal to highlight research excellence, educational impact, and advancement of science/knowledge."
+    elif org_type == "NGO":
+        org_type_instruction = "Tailor the proposal to highlight international or broad-scale public impact, capacity building, and sustainable development."
+    elif org_type == "Individual/Researcher":
+        org_type_instruction = "Tailor the proposal to highlight your personal expertise, past research success, and unique individual contribution to the field."
     else:
-        prompt = f"You are a professional grant writer... Capabilities: {data['profile'].get('capabilities', 'N/A')}... Opportunity: {data['opportunity'].get('title', 'N/A')}..."
+        org_type_instruction = f"Tailor the proposal for a {org_type} entity."
+
+    if proposal_type == 'OTA/Milestone-Driven':
+        prompt = f"You are a professional grant writer specializing in Other Transactions Agreements (OTA). {org_type_instruction} Draft a proposal focusing on Milestone-Driven Execution, Technology De-risking, technical architecture, and Advanced Tooling... Capabilities: {data['profile'].get('capabilities', 'N/A')}... Opportunity: {data['opportunity'].get('title', 'N/A')}..."
+    else:
+        prompt = f"You are a professional grant writer. {org_type_instruction} Draft a standard grant proposal... Capabilities: {data['profile'].get('capabilities', 'N/A')}... Opportunity: {data['opportunity'].get('title', 'N/A')}..."
 
     messages = [{"role": "system", "content": prompt}]
     payload = {"model": expert["model_name"], "messages": messages}
