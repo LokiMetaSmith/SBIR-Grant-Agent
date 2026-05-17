@@ -67,6 +67,57 @@
                         </ul>
                     </section>
 
+                    <!-- OTA Execution Milestones -->
+                    <section class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-600">Execution Milestones (OTA)</h2>
+
+                        <!-- List of existing milestones -->
+                        <div class="mb-6">
+                            <h3 class="text-xl font-semibold mb-2 text-gray-600">Upcoming Milestones</h3>
+                            <ul id="milestonesList" class="space-y-4">
+                                <!-- Milestones will be populated by JavaScript -->
+                            </ul>
+                        </div>
+
+                        <!-- Form to add new milestone -->
+                        <h3 class="text-xl font-semibold mb-2 text-gray-600 border-t pt-4">Add New Milestone</h3>
+                        <form id="addMilestoneForm" class="space-y-4">
+                            <div>
+                                <label for="milestoneName" class="block text-sm font-medium text-gray-700">Milestone ID / Name:</label>
+                                <input type="text" id="milestoneName" class="w-full p-2 border rounded-md" placeholder="e.g., Hardware Proof-of-Concept Prototype" required>
+                            </div>
+                            <div>
+                                <label for="milestoneDate" class="block text-sm font-medium text-gray-700">Target Date:</label>
+                                <input type="date" id="milestoneDate" class="w-full p-2 border rounded-md" required>
+                            </div>
+                            <div>
+                                <label for="milestoneDeliverable" class="block text-sm font-medium text-gray-700">Technical Deliverable:</label>
+                                <textarea id="milestoneDeliverable" class="w-full p-2 border rounded-md" placeholder="A clear definition of done (e.g., Demonstrate sub-10ms socket latency)" required></textarea>
+                            </div>
+                            <div>
+                                <label for="milestoneFunding" class="block text-sm font-medium text-gray-700">Funding Unlocked:</label>
+                                <input type="text" id="milestoneFunding" class="w-full p-2 border rounded-md" placeholder="e.g., $250,000">
+                            </div>
+                            <div>
+                                <label for="milestoneEvidence" class="block text-sm font-medium text-gray-700">Verification Evidence:</label>
+                                <input type="text" id="milestoneEvidence" class="w-full p-2 border rounded-md" placeholder="Link to reports, test data, or GitHub commits">
+                            </div>
+                            <div>
+                                <label for="milestoneStatus" class="block text-sm font-medium text-gray-700">Status:</label>
+                                <select id="milestoneStatus" class="w-full p-2 border rounded-md">
+                                    <option value="Not Started">Not Started</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Blocked">Blocked</option>
+                                    <option value="Under Federal Review">Under Federal Review</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                                Add Milestone
+                            </button>
+                        </form>
+                    </section>
+
                     <!-- Combined Search and Profile Section -->
                     <section class="bg-white rounded-lg shadow-md">
                         <div class="border-b border-gray-200">
@@ -85,6 +136,13 @@
                             <h2 class="text-2xl font-semibold mb-4 text-gray-600">Opportunity Search (sam.gov)</h2>
                             <form id="opportunitySearchForm" class="space-y-4">
                                 <input type="text" id="searchKeywords" placeholder="Keywords (e.g., SBIR, AI, sensor)" class="w-full p-2 border rounded-md">
+                                <div>
+                                    <label for="proposalTypeSearch" class="block text-sm font-medium text-gray-700">Draft Proposal Type:</label>
+                                    <select id="proposalTypeSearch" class="w-full p-2 border rounded-md">
+                                        <option value="Standard Grant">Standard Grant</option>
+                                        <option value="OTA/Milestone-Driven">OTA/Milestone-Driven</option>
+                                    </select>
+                                </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label for="searchPostedFrom" class="block text-sm font-medium text-gray-700">Posted From:</label>
@@ -253,7 +311,8 @@
             chatHistory: [],
             documents: [],
             experts: [],
-            matchedOpportunities: []
+            matchedOpportunities: [],
+            otaMilestones: []
         };
 
         // --- Core Functions ---
@@ -288,6 +347,7 @@
             appState.researchProfile.keywords = document.getElementById('profileKeywords').value;
 
             const statusEl = document.getElementById(statusElementId);
+            if (!statusEl) return;
 
             try {
                 const response = await fetch(DATA_API_ENDPOINT, {
@@ -353,6 +413,85 @@
                 const li = document.createElement('li');
                 li.textContent = `${deadline.name} (Due: ${deadline.date})`;
                 deadlinesList.appendChild(li);
+            });
+        }
+
+        function renderMilestones() {
+            const milestonesList = document.getElementById('milestonesList');
+            milestonesList.innerHTML = '';
+            (appState.otaMilestones || []).forEach((milestone, index) => {
+                const li = document.createElement('li');
+                li.className = 'p-4 border rounded-md bg-gray-50 relative';
+
+                let statusColor = 'text-gray-600';
+                if (milestone.status === 'Completed') statusColor = 'text-green-600';
+                else if (milestone.status === 'Blocked') statusColor = 'text-red-600';
+                else if (milestone.status === 'In Progress') statusColor = 'text-blue-600';
+
+                li.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-lg">${milestone.name}</h4>
+                        <button onclick="deleteMilestone(${index})" class="text-red-500 hover:text-red-700 text-xs">Delete</button>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <label class="text-sm font-semibold">Status:</label>
+                        <select onchange="updateMilestoneStatus(${index}, this.value)" class="p-1 border rounded text-sm ${statusColor}">
+                            <option value="Not Started" ${milestone.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                            <option value="In Progress" ${milestone.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="Blocked" ${milestone.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
+                            <option value="Under Federal Review" ${milestone.status === 'Under Federal Review' ? 'selected' : ''}>Under Federal Review</option>
+                            <option value="Completed" ${milestone.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                        </select>
+                    </div>
+                    <p class="text-sm"><strong>Target Date:</strong> ${milestone.date}</p>
+                    <p class="text-sm"><strong>Funding Unlocked:</strong> ${milestone.funding || 'N/A'}</p>
+                    <p class="text-sm mt-2"><strong>Deliverable:</strong> ${milestone.deliverable}</p>
+                    ${milestone.evidence ? `<p class="text-sm mt-2"><strong>Evidence:</strong> <a href="${milestone.evidence}" target="_blank" class="text-indigo-600 hover:underline">Link</a></p>` : ''}
+                `;
+                milestonesList.appendChild(li);
+            });
+        }
+
+        async function updateMilestoneStatus(index, newStatus) {
+            if (appState.otaMilestones && appState.otaMilestones[index]) {
+                appState.otaMilestones[index].status = newStatus;
+                renderMilestones();
+                await saveApplicationData();
+            }
+        }
+
+        async function deleteMilestone(index) {
+            if (confirm("Are you sure you want to delete this milestone?")) {
+                if (appState.otaMilestones) {
+                    appState.otaMilestones.splice(index, 1);
+                    renderMilestones();
+                    await saveApplicationData();
+                }
+            }
+        }
+
+        function setupOTAMilestones() {
+            renderMilestones();
+
+            const addMilestoneForm = document.getElementById('addMilestoneForm');
+            addMilestoneForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const newMilestone = {
+                    name: document.getElementById('milestoneName').value,
+                    date: document.getElementById('milestoneDate').value,
+                    deliverable: document.getElementById('milestoneDeliverable').value,
+                    funding: document.getElementById('milestoneFunding').value,
+                    evidence: document.getElementById('milestoneEvidence').value,
+                    status: document.getElementById('milestoneStatus').value,
+                };
+
+                appState.otaMilestones = appState.otaMilestones || [];
+                appState.otaMilestones.push(newMilestone);
+
+                renderMilestones();
+                addMilestoneForm.reset();
+                await saveApplicationData();
             });
         }
 
@@ -628,13 +767,14 @@
                     const opportunity = currentOpportunities[index];
                     const expertSelect = document.getElementById('chatExpertSelect');
                     const selectedExpert = expertSelect.value;
+                    const proposalType = document.getElementById('proposalTypeSearch').value;
 
                     if (expertSelect.disabled) {
                         alert("Please configure an LLM expert first.");
                         return;
                     }
 
-                    openDraftModal(opportunity, selectedExpert);
+                    openDraftModal(opportunity, selectedExpert, proposalType);
                 }
 
                 if (e.target.classList.contains('org-details-btn')) {
@@ -711,7 +851,7 @@
             }
         }
 
-        async function openDraftModal(opportunity, selectedExpert) {
+        async function openDraftModal(opportunity, selectedExpert, proposalType = "Standard Grant") {
             const modal = document.getElementById('draftModal');
             const modalContent = document.getElementById('draftModalContent');
 
@@ -725,7 +865,8 @@
                     body: JSON.stringify({
                         opportunity: opportunity,
                         profile: appState.researchProfile,
-                        expert: selectedExpert
+                        expert: selectedExpert,
+                        proposalType: proposalType
                     })
                 });
 
@@ -759,7 +900,13 @@
                             <h4 class="font-bold text-lg">${opp.title}</h4>
                             <p class="text-sm text-gray-600">${opp.fullParentPathName || 'N/A'}</p>
                         </div>
-                        <button data-index="${index}" class="draft-btn-flagged px-3 py-1 bg-cyan-500 text-white text-xs font-bold rounded-full hover:bg-cyan-600">Draft Application</button>
+                        <div class="flex flex-col items-end">
+                            <select class="proposal-type-flagged mb-2 p-1 border rounded-md text-xs">
+                                <option value="Standard Grant">Standard Grant</option>
+                                <option value="OTA/Milestone-Driven">OTA/Milestone-Driven</option>
+                            </select>
+                            <button data-index="${index}" class="draft-btn-flagged px-3 py-1 bg-cyan-500 text-white text-xs font-bold rounded-full hover:bg-cyan-600">Draft Application</button>
+                        </div>
                     </div>
                     <p class="mt-2 text-sm italic text-purple-800"><strong>Justification:</strong> ${match.match_analysis.justification}</p>
                     <a href="${opp.uiLink}" target="_blank" class="text-sm text-indigo-600 hover:underline">View on sam.gov</a>
@@ -774,11 +921,16 @@
                     const opportunity = opportunities[index].opportunity;
                     const expertSelect = document.getElementById('chatExpertSelect');
                     const selectedExpert = expertSelect.value;
+
+                    // Get the proposal type specifically from the select element next to this button
+                    const selectElement = e.target.previousElementSibling;
+                    const proposalType = selectElement ? selectElement.value : "Standard Grant";
+
                     if (expertSelect.disabled) {
                         alert("Please configure an LLM expert first.");
                         return;
                     }
-                    openDraftModal(opportunity, selectedExpert);
+                    openDraftModal(opportunity, selectedExpert, proposalType);
                 }
             });
         }
@@ -812,6 +964,7 @@
             await loadExperts();
             await loadApplicationData();
             setupDashboard(appState.budget, appState.deadlines);
+            setupOTAMilestones();
             setupReportingAssistant(appState.reportText, appState.experts);
             setupChatbot(appState.chatHistory, appState.experts);
             setupDocumentStore(appState.documents);
