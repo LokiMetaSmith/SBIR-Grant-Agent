@@ -1,0 +1,23 @@
+{
+  "name": "non-profit-grant-agent",
+  "version": "1.0.0",
+  "image": "grant-agent:latest",
+  "ui": {
+    "title": "Grant Agent",
+    "description": "Non-Profit Grant Management Dashboard",
+    "icon": "💸"
+  },
+  "resources": {
+    "cpu_mhz": 250,
+    "memory_mb": 256
+  },
+  "network": {
+    "internal_port": 5000,
+    "route_public": true
+  },
+  "storage": {
+    "enabled": true,
+    "size_gb": 1,
+    "mount_path": "/app/data"
+  }
+}

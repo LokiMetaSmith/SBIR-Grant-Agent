@@ -12,8 +12,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 load_dotenv()
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-DATA_FILE = 'data.json'
-UPLOAD_FOLDER = 'uploads'
+DATA_FILE = os.getenv('DATA_FILE', 'data.json')
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
 EXPERTS = {}
 
 # --- Automated Matching Job ---
@@ -310,4 +310,4 @@ if __name__ == '__main__':
     print("Scheduler started. Will run job in 5 seconds for testing, then daily.")
     atexit.register(lambda: scheduler.shutdown())
 
-    app.run(debug=True, port=5000, use_reloader=False)
+    app.run(host='0.0.0.0', debug=True, port=5000, use_reloader=False)
