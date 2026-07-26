@@ -136,6 +136,15 @@ def load_experts_from_env():
 def index():
     return send_from_directory('.', 'sbir_agent.html')
 
+@app.route('/.well-known/atproto-did')
+def atproto_did():
+    did = os.getenv('ATPROTO_DID', 'did:plc:placeholder-agent-did')
+    return app.response_class(
+        response=did,
+        status=200,
+        mimetype='text/plain'
+    )
+
 @app.route('/api/experts', methods=['GET'])
 def get_experts():
     return jsonify(list(EXPERTS.keys()))
