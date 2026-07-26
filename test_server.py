@@ -10,6 +10,21 @@ def client():
     with app.test_client() as client:
         yield client
 
+def test_atproto_did_route_configured(client):
+    os.environ['ATPROTO_DID'] = 'did:plc:test-did-123'
+    response = client.get('/.well-known/atproto-did')
+    assert response.status_code == 200
+    assert response.headers['Content-Type'] == 'text/plain; charset=utf-8'
+    assert response.data.decode('utf-8') == 'did:plc:test-did-123'
+
+def test_atproto_did_route_default(client):
+    if 'ATPROTO_DID' in os.environ:
+        del os.environ['ATPROTO_DID']
+    response = client.get('/.well-known/atproto-did')
+    assert response.status_code == 200
+    assert response.headers['Content-Type'] == 'text/plain; charset=utf-8'
+    assert response.data.decode('utf-8') == 'did:plc:placeholder-agent-did'
+
 def test_organization_details_no_api_key(client):
     if "SAM_API_KEY" in os.environ:
         del os.environ["SAM_API_KEY"]
