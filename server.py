@@ -267,9 +267,22 @@ def load_data():
         if os.path.exists(DATA_FILE):
             with open(DATA_FILE, 'r') as f:
                 data = json.load(f)
-                # Ensure travelBudgets exists in existing data
+                # Ensure new budget arrays exist in existing data
                 if "travelBudgets" not in data:
                     data["travelBudgets"] = []
+                if "laborBudgets" not in data:
+                    data["laborBudgets"] = []
+                if "equipmentBudgets" not in data:
+                    data["equipmentBudgets"] = []
+                if "otherCostsBudgets" not in data:
+                    data["otherCostsBudgets"] = []
+                if "projectDetails" not in data:
+                    data["projectDetails"] = {
+                        "title": "",
+                        "startDate": "",
+                        "endDate": "",
+                        "faRate": 0
+                    }
                 return jsonify(data)
         else:
             return jsonify({
@@ -281,7 +294,16 @@ def load_data():
                 "researchProfile": {},
                 "matchedOpportunities": [],
                 "otaMilestones": [],
-                "travelBudgets": []
+                "travelBudgets": [],
+                "laborBudgets": [],
+                "equipmentBudgets": [],
+                "otherCostsBudgets": [],
+                "projectDetails": {
+                    "title": "",
+                    "startDate": "",
+                    "endDate": "",
+                    "faRate": 0
+                }
             })
     except Exception as e:
         return jsonify({"error": "Could not load data."}), 500
