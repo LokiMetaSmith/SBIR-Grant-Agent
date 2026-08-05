@@ -141,6 +141,7 @@
                                     <select id="proposalTypeSearch" class="w-full p-2 border rounded-md">
                                         <option value="Standard Grant">Standard Grant</option>
                                         <option value="OTA/Milestone-Driven">OTA/Milestone-Driven</option>
+                                        <option value="Mini-study (OSDR Praxis)">Mini-study (OSDR Praxis)</option>
                                     </select>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
@@ -213,7 +214,25 @@
                                     <label for="topics" class="block text-sm font-medium text-gray-700">Research Topics of Interest</label>
                                     <textarea id="topics" rows="4" class="w-full p-2 border rounded-md" placeholder="Enter keywords, domains, and specific research topics of interest..."></textarea>
                                 </div>
-                                <button id="saveProfileBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+
+                                <hr class="my-4 border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-600">OSDR Mini-study Settings</h3>
+                                <div>
+                                    <label for="osdrDataReviewType" class="block text-sm font-medium text-gray-700">Type of Data Review</label>
+                                    <input type="text" id="osdrDataReviewType" class="w-full p-2 border rounded-md" placeholder="e.g., Systematic, Scoping, Meta-analysis">
+                                </div>
+                                <div>
+                                    <label for="osdrContext" class="block text-sm font-medium text-gray-700">Mini-study Context</label>
+                                    <select id="osdrContext" class="w-full p-2 border rounded-md">
+                                        <option value="Prepare for a new project">I will use an OSDR approach to prepare for a new project.</option>
+                                        <option value="Propose new research">I will use an OSDR approach to propose new research.</option>
+                                        <option value="Report new findings">I will use an OSDR approach to report new findings in a publication.</option>
+                                        <option value="Strengthen existing project">I will use an OSDR approach to strengthen an existing project.</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+
+                                <button id="saveProfileBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px mt-4">
                                     Save Profile
                                 </button>
                                 <div id="profileSaveStatus" class="text-center text-sm text-green-600 h-4"></div>
@@ -261,7 +280,78 @@
                                 </button>
                             </div>
                         </div>
-                        <textarea id="reportInput" class="w-full h-40 p-2 border rounded-md" placeholder="Enter your accomplishments and data for the reporting period..."></textarea>
+                        <div class="space-y-4 mb-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Overall Progress Status</label>
+                                    <select id="reportStatusSelect" class="w-full p-2 border rounded-md text-sm">
+                                        <option value="On Track">On Track</option>
+                                        <option value="Minor Delays (Manageable)">Minor Delays (Manageable)</option>
+                                        <option value="Significant Delays (Requires Attention)">Significant Delays (Requires Attention)</option>
+                                        <option value="Completed/Closing Phase">Completed/Closing Phase</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Quality of Results (1=Poor, 7=Excellent)</label>
+                                    <select id="reportQualitySelect" class="w-full p-2 border rounded-md text-sm">
+                                        <option value="1">1 - Poor</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5" selected>5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7 - Excellent</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Time Spent on Activities (Hours)</label>
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                                    <div>
+                                        <span class="block text-xs text-gray-500">Literature Review</span>
+                                        <select id="timeLitReview" class="w-full p-1 border rounded text-xs">
+                                            <option value="0-10 hrs">0-10 hrs</option><option value="11-20 hrs">11-20 hrs</option><option value="21-40 hrs">21-40 hrs</option><option value="40+ hrs">40+ hrs</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <span class="block text-xs text-gray-500">Experimental</span>
+                                        <select id="timeExperimental" class="w-full p-1 border rounded text-xs">
+                                            <option value="0-10 hrs">0-10 hrs</option><option value="11-20 hrs">11-20 hrs</option><option value="21-40 hrs">21-40 hrs</option><option value="40+ hrs">40+ hrs</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <span class="block text-xs text-gray-500">Data Analysis</span>
+                                        <select id="timeDataAnalysis" class="w-full p-1 border rounded text-xs">
+                                            <option value="0-10 hrs">0-10 hrs</option><option value="11-20 hrs">11-20 hrs</option><option value="21-40 hrs">21-40 hrs</option><option value="40+ hrs">40+ hrs</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <span class="block text-xs text-gray-500">Coding/Dev</span>
+                                        <select id="timeCoding" class="w-full p-1 border rounded text-xs">
+                                            <option value="0-10 hrs">0-10 hrs</option><option value="11-20 hrs">11-20 hrs</option><option value="21-40 hrs">21-40 hrs</option><option value="40+ hrs">40+ hrs</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <span class="block text-xs text-gray-500">Documentation</span>
+                                        <select id="timeDocumentation" class="w-full p-1 border rounded text-xs">
+                                            <option value="0-10 hrs">0-10 hrs</option><option value="11-20 hrs">11-20 hrs</option><option value="21-40 hrs">21-40 hrs</option><option value="40+ hrs">40+ hrs</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Milestone Completion (%)</label>
+                                <div id="reportMilestoneContainer" class="space-y-2 border p-3 rounded-md bg-gray-50 max-h-40 overflow-y-auto">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Qualitative Accomplishments & Notes</label>
+                        <textarea id="reportInput" class="w-full h-32 p-2 border rounded-md" placeholder="Enter your accomplishments and data for the reporting period..."></textarea>
+
                         <button id="generateReportBtn" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
                             Generate Report Draft
                         </button>
@@ -662,6 +752,21 @@
             appState.researchProfile.topics = document.getElementById('topics').value;
             appState.researchProfile.keywords = document.getElementById('profileKeywords').value;
             appState.researchProfile.organizationType = document.getElementById('organizationType').value;
+            appState.researchProfile.osdrDataReviewType = document.getElementById('osdrDataReviewType').value;
+            appState.researchProfile.osdrContext = document.getElementById('osdrContext').value;
+
+            // Capture Reporting Metrics
+            appState.reportMetrics = appState.reportMetrics || {};
+            appState.reportMetrics.status = document.getElementById('reportStatusSelect') ? document.getElementById('reportStatusSelect').value : "On Track";
+            appState.reportMetrics.quality = document.getElementById('reportQualitySelect') ? parseInt(document.getElementById('reportQualitySelect').value) : 5;
+
+            appState.reportMetrics.timeSpent = {
+                Literature: document.getElementById('timeLitReview') ? document.getElementById('timeLitReview').value : "0-10 hrs",
+                Experimental: document.getElementById('timeExperimental') ? document.getElementById('timeExperimental').value : "0-10 hrs",
+                DataAnalysis: document.getElementById('timeDataAnalysis') ? document.getElementById('timeDataAnalysis').value : "0-10 hrs",
+                Coding: document.getElementById('timeCoding') ? document.getElementById('timeCoding').value : "0-10 hrs",
+                Documentation: document.getElementById('timeDocumentation') ? document.getElementById('timeDocumentation').value : "0-10 hrs"
+            };
 
             const statusEl = document.getElementById(statusElementId);
             if (!statusEl) return;
@@ -812,7 +917,7 @@
             });
         }
 
-        function setupReportingAssistant(initialText, experts) {
+        function setupReportingAssistant(initialText, experts, metrics) {
             const generateReportBtn = document.getElementById('generateReportBtn');
             const reportInput = document.getElementById('reportInput');
             const reportOutput = document.getElementById('reportOutput');
@@ -821,6 +926,55 @@
 
             populateExpertSelector('reportExpertSelect', experts);
             reportInput.value = initialText || "";
+
+            // Populate stored metrics
+            if (metrics) {
+                if (document.getElementById('reportStatusSelect')) document.getElementById('reportStatusSelect').value = metrics.status || "On Track";
+                if (document.getElementById('reportQualitySelect')) document.getElementById('reportQualitySelect').value = metrics.quality || 5;
+                if (metrics.timeSpent) {
+                    if (document.getElementById('timeLitReview')) document.getElementById('timeLitReview').value = metrics.timeSpent.Literature || "0-10 hrs";
+                    if (document.getElementById('timeExperimental')) document.getElementById('timeExperimental').value = metrics.timeSpent.Experimental || "0-10 hrs";
+                    if (document.getElementById('timeDataAnalysis')) document.getElementById('timeDataAnalysis').value = metrics.timeSpent.DataAnalysis || "0-10 hrs";
+                    if (document.getElementById('timeCoding')) document.getElementById('timeCoding').value = metrics.timeSpent.Coding || "0-10 hrs";
+                    if (document.getElementById('timeDocumentation')) document.getElementById('timeDocumentation').value = metrics.timeSpent.Documentation || "0-10 hrs";
+                }
+            }
+
+            // Render Milestones for Completion Updates
+            const renderReportMilestones = () => {
+                const container = document.getElementById('reportMilestoneContainer');
+                if (!container) return;
+                container.innerHTML = '';
+
+                if (!appState.otaMilestones || appState.otaMilestones.length === 0) {
+                    container.innerHTML = '<p class="text-xs text-gray-500">No milestones configured. Add them in the Execution Milestones section.</p>';
+                    return;
+                }
+
+                appState.otaMilestones.forEach((ms, index) => {
+                    const pct = ms.completionPercentage || 0;
+                    const div = document.createElement('div');
+                    div.className = "flex justify-between items-center text-sm";
+                    div.innerHTML = `
+                        <span class="truncate w-3/4 pr-2" title="${ms.name}">${ms.name}</span>
+                        <div class="flex items-center w-1/4">
+                            <input type="number" min="0" max="100" class="w-16 p-1 border rounded mr-1 text-right" value="${pct}"
+                                onchange="updateMilestoneCompletion(${index}, this.value)">
+                            <span>%</span>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            };
+
+            window.updateMilestoneCompletion = async (index, value) => {
+                appState.otaMilestones[index].completionPercentage = parseInt(value) || 0;
+                renderMilestones(); // Update the main milestone widget
+                await saveApplicationData();
+            };
+
+            renderReportMilestones();
+
             saveReportBtn.addEventListener('click', () => saveApplicationData('saveStatus'));
 
             generateReportBtn.addEventListener('click', async () => {
@@ -835,7 +989,31 @@
                 reportOutput.innerHTML = '<div class="spinner mx-auto"></div>';
                 reportOutput.classList.remove('hidden');
 
-                const systemPrompt = `You are an AI assistant specialized in generating sections for grant reports. Your task is to take the user's raw notes and accomplishments and format them into a professional, well-structured report section. The tone should be formal and objective. Focus on clearly presenting the technical progress and outcomes.`;
+                // Gather structured metrics for prompt
+                const status = document.getElementById('reportStatusSelect').value;
+                const quality = document.getElementById('reportQualitySelect').value;
+                const timeSpent = `Literature Review: ${document.getElementById('timeLitReview').value}, Experimental Setup: ${document.getElementById('timeExperimental').value}, Data Analysis: ${document.getElementById('timeDataAnalysis').value}, Coding: ${document.getElementById('timeCoding').value}, Documentation: ${document.getElementById('timeDocumentation').value}`;
+
+                let msProgress = "";
+                if (appState.otaMilestones && appState.otaMilestones.length > 0) {
+                    msProgress = appState.otaMilestones.map(ms => `- ${ms.name}: ${ms.completionPercentage || 0}%`).join('\n');
+                } else {
+                    msProgress = "No tracked milestones.";
+                }
+
+                const systemPrompt = `You are an AI assistant specialized in generating sections for monthly research project technical reports.
+Your task is to weave the user's structured metrics and raw qualitative notes into a professional, cohesive narrative report.
+
+**Structured Metrics for this Period:**
+- Overall Progress Status: ${status}
+- Quality of Results generated (1-7 scale): ${quality}
+- Time Spent: ${timeSpent}
+- Milestone Progress:
+${msProgress}
+
+**Instructions:**
+Write a formal and objective report section. Start by summarizing the overall status and metrics, then detail the technical accomplishments using the user's notes. Do not include markdown formatting like backticks for HTML. Structure it clearly using HTML tags like <h3>, <p>, and <ul>.`;
+
                 const messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: accomplishments }];
 
                 try {
@@ -847,6 +1025,9 @@
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.error || `API request failed`);
                     reportOutput.innerHTML = data.choices[0].message.content.replace(/```html/g, '').replace(/```/g, '');
+
+                    // Auto-save the updated metrics
+                    await saveApplicationData('saveStatus');
                 } catch (error) {
                     reportOutput.innerHTML = `<p class="text-red-500">Sorry, I encountered an error. Error: ${error.message}</p>`;
                 }
@@ -1526,6 +1707,8 @@ Make reasonable guesses. If unknown, use defaults (e.g. 0 for costs, 1 for count
             const topicsInput = document.getElementById('topics');
             const keywordsInput = document.getElementById('profileKeywords');
             const organizationTypeInput = document.getElementById('organizationType');
+            const osdrDataReviewTypeInput = document.getElementById('osdrDataReviewType');
+            const osdrContextInput = document.getElementById('osdrContext');
             const saveBtn = document.getElementById('saveProfileBtn');
 
             if (profile) {
@@ -1533,6 +1716,8 @@ Make reasonable guesses. If unknown, use defaults (e.g. 0 for costs, 1 for count
                 topicsInput.value = profile.topics || '';
                 keywordsInput.value = profile.keywords || '';
                 organizationTypeInput.value = profile.organizationType || 'Non-Profit (501c3)';
+                osdrDataReviewTypeInput.value = profile.osdrDataReviewType || '';
+                osdrContextInput.value = profile.osdrContext || 'Prepare for a new project';
             }
 
             saveBtn.addEventListener('click', () => saveApplicationData('profileSaveStatus'));
@@ -1781,6 +1966,7 @@ Make reasonable guesses. If unknown, use defaults (e.g. 0 for costs, 1 for count
                             <select class="proposal-type-flagged mb-2 p-1 border rounded-md text-xs">
                                 <option value="Standard Grant">Standard Grant</option>
                                 <option value="OTA/Milestone-Driven">OTA/Milestone-Driven</option>
+                                <option value="Mini-study (OSDR Praxis)">Mini-study (OSDR Praxis)</option>
                             </select>
                             <button data-index="${index}" class="draft-btn-flagged px-3 py-1 bg-cyan-500 text-white text-xs font-bold rounded-full hover:bg-cyan-600">Draft Application</button>
                         </div>
@@ -1842,7 +2028,7 @@ Make reasonable guesses. If unknown, use defaults (e.g. 0 for costs, 1 for count
             await loadApplicationData();
             setupDashboard(appState.budget, appState.deadlines);
             setupOTAMilestones();
-            setupReportingAssistant(appState.reportText, appState.experts);
+            setupReportingAssistant(appState.reportText, appState.experts, appState.reportMetrics);
             setupBudgetPlanner(appState.experts);
             setupChatbot(appState.chatHistory, appState.experts);
             setupDocumentStore(appState.documents);

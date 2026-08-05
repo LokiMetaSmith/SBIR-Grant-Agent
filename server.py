@@ -230,6 +230,16 @@ def draft_application():
 
     if proposal_type == 'OTA/Milestone-Driven':
         prompt = f"You are a professional grant writer specializing in Other Transactions Agreements (OTA). {org_type_instruction} Draft a proposal focusing on Milestone-Driven Execution, Technology De-risking, technical architecture, and Advanced Tooling... Capabilities: {data['profile'].get('capabilities', 'N/A')}... Opportunity: {data['opportunity'].get('title', 'N/A')}..."
+    elif proposal_type == 'Mini-study (OSDR Praxis)':
+        osdr_type = data['profile'].get('osdrDataReviewType', 'General Data Review')
+        osdr_context = data['profile'].get('osdrContext', 'General Research')
+        prompt = f"""You are a professional research scientist writing a 1-page OSDR Praxis mini-study proposal.
+        Context: The user intends to use an OSDR approach to {osdr_context}.
+        Data Review Type: {osdr_type}.
+        {org_type_instruction}
+        Write a concise, 1-page proposal that includes an abstract, work plan, and timeline.
+        Capabilities: {data['profile'].get('capabilities', 'N/A')}.
+        Opportunity/Topic: {data['opportunity'].get('title', 'N/A')}."""
     else:
         prompt = f"You are a professional grant writer. {org_type_instruction} Draft a standard grant proposal... Capabilities: {data['profile'].get('capabilities', 'N/A')}... Opportunity: {data['opportunity'].get('title', 'N/A')}..."
 
@@ -292,12 +302,37 @@ def load_data():
                 if "projectDetails" in data and "faBaseType" not in data["projectDetails"]:
                     data["projectDetails"]["faBaseType"] = "MTDC"
 
+                # Ensure reporting metrics exist
+                if "reportMetrics" not in data:
+                    data["reportMetrics"] = {
+                        "status": "On Track",
+                        "quality": 5,
+                        "timeSpent": {
+                            "Literature": "0-10 hrs",
+                            "Experimental": "0-10 hrs",
+                            "DataAnalysis": "0-10 hrs",
+                            "Coding": "0-10 hrs",
+                            "Documentation": "0-10 hrs"
+                        }
+                    }
+
                 return jsonify(data)
         else:
             return jsonify({
                 "budget": {},
                 "deadlines": [],
                 "reportText": "",
+                "reportMetrics": {
+                    "status": "On Track",
+                    "quality": 5,
+                    "timeSpent": {
+                        "Literature": "0-10 hrs",
+                        "Experimental": "0-10 hrs",
+                        "DataAnalysis": "0-10 hrs",
+                        "Coding": "0-10 hrs",
+                        "Documentation": "0-10 hrs"
+                    }
+                },
                 "chatHistory": [],
                 "documents": [],
                 "researchProfile": {},
