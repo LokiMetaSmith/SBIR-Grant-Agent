@@ -266,11 +266,63 @@ def load_data():
     try:
         if os.path.exists(DATA_FILE):
             with open(DATA_FILE, 'r') as f:
-                return jsonify(json.load(f))
+                data = json.load(f)
+                # Ensure new budget arrays exist in existing data
+                if "travelBudgets" not in data:
+                    data["travelBudgets"] = []
+                if "laborBudgets" not in data:
+                    data["laborBudgets"] = []
+                if "equipmentBudgets" not in data:
+                    data["equipmentBudgets"] = []
+                if "otherCostsBudgets" not in data:
+                    data["otherCostsBudgets"] = []
+                if "projectDetails" not in data:
+                    data["projectDetails"] = {
+                        "title": "",
+                        "startDate": "",
+                        "endDate": "",
+                        "faRate": 0
+                    }
+                return jsonify(data)
         else:
-            return jsonify({"budget": {}, "deadlines": [], "reportText": "", "chatHistory": [], "documents": [], "researchProfile": {}, "matchedOpportunities": [], "otaMilestones": []})
+            return jsonify({
+                "budget": {},
+                "deadlines": [],
+                "reportText": "",
+                "chatHistory": [],
+                "documents": [],
+                "researchProfile": {},
+                "matchedOpportunities": [],
+                "otaMilestones": [],
+                "travelBudgets": [],
+                "laborBudgets": [],
+                "equipmentBudgets": [],
+                "otherCostsBudgets": [],
+                "projectDetails": {
+                    "title": "",
+                    "startDate": "",
+                    "endDate": "",
+                    "faRate": 0
+                }
+            })
     except Exception as e:
         return jsonify({"error": "Could not load data."}), 500
+
+@app.route('/api/gsa_perdiem', methods=['GET'])
+def get_gsa_perdiem():
+    """Mock endpoint for GSA Per Diem API."""
+    destination = request.args.get('destination', '').lower()
+
+    # Simple mocked data based on destination keywords
+    if 'dc' in destination or 'washington' in destination:
+        return jsonify({"lodging": 258, "meals": 79})
+    elif 'ny' in destination or 'new york' in destination:
+        return jsonify({"lodging": 286, "meals": 79})
+    elif 'ca' in destination or 'san francisco' in destination or 'los angeles' in destination:
+        return jsonify({"lodging": 270, "meals": 74})
+    else:
+        # Default average rates
+        return jsonify({"lodging": 107, "meals": 59})
 
 @app.route('/api/data', methods=['POST'])
 def save_data():
