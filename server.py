@@ -276,13 +276,22 @@ def load_data():
                     data["equipmentBudgets"] = []
                 if "otherCostsBudgets" not in data:
                     data["otherCostsBudgets"] = []
+                if "participantBudgets" not in data:
+                    data["participantBudgets"] = []
+                if "subawardBudgets" not in data:
+                    data["subawardBudgets"] = []
                 if "projectDetails" not in data:
                     data["projectDetails"] = {
                         "title": "",
                         "startDate": "",
                         "endDate": "",
-                        "faRate": 0
+                        "faRate": 0,
+                        "faBaseType": "MTDC"
                     }
+                # Handle case where projectDetails exists but faBaseType is missing
+                if "projectDetails" in data and "faBaseType" not in data["projectDetails"]:
+                    data["projectDetails"]["faBaseType"] = "MTDC"
+
                 return jsonify(data)
         else:
             return jsonify({
@@ -298,11 +307,14 @@ def load_data():
                 "laborBudgets": [],
                 "equipmentBudgets": [],
                 "otherCostsBudgets": [],
+                "participantBudgets": [],
+                "subawardBudgets": [],
                 "projectDetails": {
                     "title": "",
                     "startDate": "",
                     "endDate": "",
-                    "faRate": 0
+                    "faRate": 0,
+                    "faBaseType": "MTDC"
                 }
             })
     except Exception as e:

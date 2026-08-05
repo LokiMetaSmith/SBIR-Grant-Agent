@@ -315,11 +315,17 @@
                         <button id="tab-budget-equipment" class="budget-tab-btn w-1/5 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
                             Equipment
                         </button>
-                        <button id="tab-budget-travel" class="budget-tab-btn w-1/5 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                        <button id="tab-budget-travel" class="budget-tab-btn w-1/7 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
                             Travel
                         </button>
-                        <button id="tab-budget-other" class="budget-tab-btn w-1/5 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                        <button id="tab-budget-other" class="budget-tab-btn w-1/7 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
                             Other Costs
+                        </button>
+                        <button id="tab-budget-participant" class="budget-tab-btn w-1/7 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                            Participant Support
+                        </button>
+                        <button id="tab-budget-subaward" class="budget-tab-btn w-1/7 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                            Subawards
                         </button>
                     </nav>
                 </div>
@@ -341,7 +347,13 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">F&A (Overhead) Rate %</label>
-                            <input type="number" step="0.1" id="projectFaRate" class="w-full p-2 border rounded-md text-sm" onchange="updateProjectDetails('faRate', this.value)">
+                            <div class="flex">
+                                <input type="number" step="0.1" id="projectFaRate" class="w-1/2 p-2 border rounded-l-md text-sm" onchange="updateProjectDetails('faRate', this.value)">
+                                <select id="projectFaBaseType" class="w-1/2 p-2 border border-l-0 rounded-r-md text-sm bg-gray-50" onchange="updateProjectDetails('faBaseType', this.value)">
+                                    <option value="MTDC">MTDC</option>
+                                    <option value="TDC">TDC</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -382,6 +394,7 @@
                                     <th class="px-2 py-2 border-b">Months</th>
                                     <th class="px-2 py-2 border-b">% Effort</th>
                                     <th class="px-2 py-2 border-b">Base Salary ($)</th>
+                                    <th class="px-2 py-2 border-b">Fringe Rate (%)</th>
                                     <th class="px-2 py-2 border-b text-right">Total ($)</th>
                                     <th class="px-2 py-2 border-b"></th>
                                 </tr>
@@ -486,6 +499,62 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Participant Support Tab Content -->
+                <div id="content-budget-participant" class="p-6 budget-tab-content hidden">
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-500 mb-2">Describe participant support costs (e.g., "Provide $1,000 stipends for 5 graduate student participants in Year 1"). Note: Participant Support is typically excluded from MTDC overhead calculations.</p>
+                        <div class="flex">
+                            <input type="text" id="participantInput" class="flex-grow p-2 border rounded-l-md" placeholder='Enter participant support details...'>
+                            <button id="participantParseBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-r-md transition-all">Parse Request</button>
+                        </div>
+                        <div id="participantMessage" class="mt-2 text-sm hidden"></div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-200">
+                            <thead>
+                                <tr class="bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase">
+                                    <th class="px-2 py-2 border-b">Year</th>
+                                    <th class="px-2 py-2 border-b">Category of Participant</th>
+                                    <th class="px-2 py-2 border-b">Support Type</th>
+                                    <th class="px-2 py-2 border-b"># of Items</th>
+                                    <th class="px-2 py-2 border-b">Cost/Item ($)</th>
+                                    <th class="px-2 py-2 border-b text-right">Total ($)</th>
+                                    <th class="px-2 py-2 border-b"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="participantTableBody" class="text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Subawards Tab Content -->
+                <div id="content-budget-subaward" class="p-6 budget-tab-content hidden">
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-500 mb-2">Describe subaward needs (e.g., "Add a Year 1 subaward to MIT for $30,000 direct costs and $15,000 indirect costs"). Note: For MTDC calculations, only the first $25,000 of each subaward is included in the base.</p>
+                        <div class="flex">
+                            <input type="text" id="subawardInput" class="flex-grow p-2 border rounded-l-md" placeholder='Enter subaward details...'>
+                            <button id="subawardParseBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-r-md transition-all">Parse Request</button>
+                        </div>
+                        <div id="subawardMessage" class="mt-2 text-sm hidden"></div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-200">
+                            <thead>
+                                <tr class="bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase">
+                                    <th class="px-2 py-2 border-b">Year</th>
+                                    <th class="px-2 py-2 border-b">Institution Name</th>
+                                    <th class="px-2 py-2 border-b">Direct Costs ($)</th>
+                                    <th class="px-2 py-2 border-b">Indirect Costs ($)</th>
+                                    <th class="px-2 py-2 border-b text-right">Total ($)</th>
+                                    <th class="px-2 py-2 border-b"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="subawardTableBody" class="text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
             </section>
         </main>
     </div>
@@ -551,11 +620,14 @@
             laborBudgets: [],
             equipmentBudgets: [],
             otherCostsBudgets: [],
+            participantBudgets: [],
+            subawardBudgets: [],
             projectDetails: {
                 title: "",
                 startDate: "",
                 endDate: "",
-                faRate: 0
+                faRate: 0,
+                faBaseType: "MTDC"
             }
         };
 
@@ -788,7 +860,7 @@
             saveBtn.addEventListener('click', () => saveApplicationData('budgetSaveStatus'));
 
             // Tab Logic
-            const tabs = ['summary', 'labor', 'equipment', 'travel', 'other'];
+            const tabs = ['summary', 'labor', 'equipment', 'travel', 'other', 'participant', 'subaward'];
             tabs.forEach(tab => {
                 document.getElementById(`tab-budget-${tab}`).addEventListener('click', () => {
                     tabs.forEach(t => {
@@ -812,6 +884,7 @@
             document.getElementById('projectStartDate').value = appState.projectDetails.startDate || "";
             document.getElementById('projectEndDate').value = appState.projectDetails.endDate || "";
             document.getElementById('projectFaRate').value = appState.projectDetails.faRate || 0;
+            document.getElementById('projectFaBaseType').value = appState.projectDetails.faBaseType || "MTDC";
 
             window.updateProjectDetails = async (field, value) => {
                 appState.projectDetails[field] = value;
@@ -838,7 +911,11 @@
                     const months = parseFloat(item.months) || 0;
                     const effort = parseFloat(item.effort) || 0;
                     const salary = parseFloat(item.salary) || 0;
-                    const total = salary * (effort / 100) * (months / 12);
+                    const fringeRate = parseFloat(item.fringeRate) || 0;
+
+                    const baseTotal = salary * (effort / 100) * (months / 12);
+                    const fringeTotal = baseTotal * (fringeRate / 100);
+                    const total = baseTotal + fringeTotal;
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -847,8 +924,52 @@
                         <td class="px-2 py-2 border-b"><input type="number" step="0.1" value="${months}" class="w-full text-xs" onchange="updateBudgetRow('laborBudgets', ${index}, 'months', this.value)"></td>
                         <td class="px-2 py-2 border-b"><input type="number" step="1" value="${effort}" class="w-full text-xs" onchange="updateBudgetRow('laborBudgets', ${index}, 'effort', this.value)"></td>
                         <td class="px-2 py-2 border-b"><input type="number" value="${salary}" class="w-full text-xs" onchange="updateBudgetRow('laborBudgets', ${index}, 'salary', this.value)"></td>
+                        <td class="px-2 py-2 border-b"><input type="number" step="0.1" value="${fringeRate}" class="w-full text-xs" onchange="updateBudgetRow('laborBudgets', ${index}, 'fringeRate', this.value)"></td>
                         <td class="px-2 py-2 border-b text-right font-semibold">$${total.toFixed(2)}</td>
                         <td class="px-2 py-2 border-b text-red-500 cursor-pointer text-xs" onclick="deleteBudgetRow('laborBudgets', ${index})">Del</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            };
+
+            const renderParticipantTable = () => {
+                const tbody = document.getElementById('participantTableBody');
+                tbody.innerHTML = '';
+                appState.participantBudgets.forEach((item, index) => {
+                    const numItems = parseFloat(item.numItems) || 1;
+                    const costPerItem = parseFloat(item.costPerItem) || 0;
+                    const total = numItems * costPerItem;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="px-2 py-2 border-b"><input type="text" value="${item.year || 'Year 1'}" class="w-full text-xs" onchange="updateBudgetRow('participantBudgets', ${index}, 'year', this.value)"></td>
+                        <td class="px-2 py-2 border-b"><input type="text" value="${item.category || ''}" class="w-full text-xs" onchange="updateBudgetRow('participantBudgets', ${index}, 'category', this.value)"></td>
+                        <td class="px-2 py-2 border-b"><input type="text" value="${item.supportType || ''}" class="w-full text-xs" onchange="updateBudgetRow('participantBudgets', ${index}, 'supportType', this.value)"></td>
+                        <td class="px-2 py-2 border-b"><input type="number" value="${numItems}" class="w-full text-xs" onchange="updateBudgetRow('participantBudgets', ${index}, 'numItems', this.value)"></td>
+                        <td class="px-2 py-2 border-b"><input type="number" value="${costPerItem}" class="w-full text-xs" onchange="updateBudgetRow('participantBudgets', ${index}, 'costPerItem', this.value)"></td>
+                        <td class="px-2 py-2 border-b text-right font-semibold">$${total.toFixed(2)}</td>
+                        <td class="px-2 py-2 border-b text-red-500 cursor-pointer text-xs" onclick="deleteBudgetRow('participantBudgets', ${index})">Del</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            };
+
+            const renderSubawardTable = () => {
+                const tbody = document.getElementById('subawardTableBody');
+                tbody.innerHTML = '';
+                appState.subawardBudgets.forEach((item, index) => {
+                    const direct = parseFloat(item.direct) || 0;
+                    const indirect = parseFloat(item.indirect) || 0;
+                    const total = direct + indirect;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="px-2 py-2 border-b"><input type="text" value="${item.year || 'Year 1'}" class="w-full text-xs" onchange="updateBudgetRow('subawardBudgets', ${index}, 'year', this.value)"></td>
+                        <td class="px-2 py-2 border-b"><input type="text" value="${item.institution || ''}" class="w-full text-xs" onchange="updateBudgetRow('subawardBudgets', ${index}, 'institution', this.value)"></td>
+                        <td class="px-2 py-2 border-b"><input type="number" value="${direct}" class="w-full text-xs" onchange="updateBudgetRow('subawardBudgets', ${index}, 'direct', this.value)"></td>
+                        <td class="px-2 py-2 border-b"><input type="number" value="${indirect}" class="w-full text-xs" onchange="updateBudgetRow('subawardBudgets', ${index}, 'indirect', this.value)"></td>
+                        <td class="px-2 py-2 border-b text-right font-semibold">$${total.toFixed(2)}</td>
+                        <td class="px-2 py-2 border-b text-red-500 cursor-pointer text-xs" onclick="deleteBudgetRow('subawardBudgets', ${index})">Del</td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -947,7 +1068,9 @@
 
                 let y1Labor = 0, y2Labor = 0;
                 appState.laborBudgets.forEach(item => {
-                    const total = (parseFloat(item.salary)||0) * ((parseFloat(item.effort)||0) / 100) * ((parseFloat(item.months)||0) / 12);
+                    const baseTotal = (parseFloat(item.salary)||0) * ((parseFloat(item.effort)||0) / 100) * ((parseFloat(item.months)||0) / 12);
+                    const fringeTotal = baseTotal * ((parseFloat(item.fringeRate)||0) / 100);
+                    const total = baseTotal + fringeTotal;
                     if ((item.year || '').includes('2')) y2Labor += total; else y1Labor += total;
                 });
 
@@ -969,36 +1092,95 @@
                     if ((item.year || '').includes('2')) y2Other += total; else y1Other += total;
                 });
 
-                const y1Direct = y1Labor + y1Equip + y1Travel + y1Other;
-                const y2Direct = y2Labor + y2Equip + y2Travel + y2Other;
-                const totalDirect = y1Direct + y2Direct;
+                let y1Participant = 0, y2Participant = 0;
+                appState.participantBudgets.forEach(item => {
+                    const total = (parseFloat(item.numItems)||1) * (parseFloat(item.costPerItem)||0);
+                    if ((item.year || '').includes('2')) y2Participant += total; else y1Participant += total;
+                });
+
+                let y1SubawardTotal = 0, y2SubawardTotal = 0;
+                let y1SubawardExcluded = 0, y2SubawardExcluded = 0;
+                let subawardTotalsByInst = {};
+
+                appState.subawardBudgets.forEach(item => {
+                    const inst = item.institution || 'Unknown';
+                    const direct = parseFloat(item.direct) || 0;
+                    const indirect = parseFloat(item.indirect) || 0;
+                    const total = direct + indirect;
+
+                    if (!subawardTotalsByInst[inst]) subawardTotalsByInst[inst] = 0;
+
+                    let excludedThisRow = 0;
+                    const currentTotal = subawardTotalsByInst[inst];
+                    const newTotal = currentTotal + total;
+
+                    if (newTotal > 25000) {
+                        if (currentTotal < 25000) {
+                            excludedThisRow = newTotal - 25000;
+                        } else {
+                            excludedThisRow = total;
+                        }
+                    }
+
+                    subawardTotalsByInst[inst] = newTotal;
+
+                    if ((item.year || '').includes('2')) {
+                        y2SubawardTotal += total;
+                        y2SubawardExcluded += excludedThisRow;
+                    } else {
+                        y1SubawardTotal += total;
+                        y1SubawardExcluded += excludedThisRow;
+                    }
+                });
+
+                const y1Direct = y1Labor + y1Equip + y1Travel + y1Other + y1Participant + y1SubawardTotal;
+                const y2Direct = y2Labor + y2Equip + y2Travel + y2Other + y2Participant + y2SubawardTotal;
 
                 const faRate = (parseFloat(appState.projectDetails.faRate) || 0) / 100;
-                const y1Fa = y1Direct * faRate;
-                const y2Fa = y2Direct * faRate;
-                const totalFa = y1Fa + y2Fa;
+                const faBaseType = appState.projectDetails.faBaseType || 'MTDC';
+
+                let y1FaBase = y1Direct;
+                let y2FaBase = y2Direct;
+
+                if (faBaseType === 'MTDC') {
+                    y1FaBase = y1Direct - y1Equip - y1Participant - y1SubawardExcluded;
+                    y2FaBase = y2Direct - y2Equip - y2Participant - y2SubawardExcluded;
+                }
+
+                const y1Fa = y1FaBase * faRate;
+                const y2Fa = y2FaBase * faRate;
 
                 const y1Total = y1Direct + y1Fa;
                 const y2Total = y2Direct + y2Fa;
-                const grandTotal = y1Total + y2Total;
 
-                const addRow = (label, y1, y2, isBold = false) => {
+                const addRow = (label, y1, y2, isBold = false, isIndent = false, classes = '') => {
                     const tr = document.createElement('tr');
-                    const classes = isBold ? 'font-bold bg-gray-50' : '';
+                    const weightClasses = isBold ? 'font-bold bg-gray-50' : '';
+                    const indentClass = isIndent ? 'pl-8 text-gray-500' : 'px-4';
                     tr.innerHTML = `
-                        <td class="px-4 py-2 border-b ${classes}">${label}</td>
-                        <td class="px-4 py-2 border-b text-right ${classes}">$${y1.toFixed(2)}</td>
-                        <td class="px-4 py-2 border-b text-right ${classes}">$${y2.toFixed(2)}</td>
-                        <td class="px-4 py-2 border-b text-right font-bold text-indigo-600 ${classes}">$${(y1 + y2).toFixed(2)}</td>
+                        <td class="${indentClass} py-2 border-b ${weightClasses} ${classes}">${label}</td>
+                        <td class="px-4 py-2 border-b text-right ${weightClasses} ${classes}">$${y1.toFixed(2)}</td>
+                        <td class="px-4 py-2 border-b text-right ${weightClasses} ${classes}">$${y2.toFixed(2)}</td>
+                        <td class="px-4 py-2 border-b text-right font-bold text-indigo-600 ${weightClasses} ${classes}">$${(y1 + y2).toFixed(2)}</td>
                     `;
                     tbody.appendChild(tr);
                 };
 
-                addRow('Direct Labor', y1Labor, y2Labor);
+                addRow('Direct Labor (incl. Fringe)', y1Labor, y2Labor);
                 addRow('Equipment', y1Equip, y2Equip);
                 addRow('Travel', y1Travel, y2Travel);
                 addRow('Other Direct Costs', y1Other, y2Other);
-                addRow('Subtotal (Direct Costs)', y1Direct, y2Direct, true);
+                addRow('Participant Support', y1Participant, y2Participant);
+                addRow('Subawards', y1SubawardTotal, y2SubawardTotal);
+                addRow('Total Direct Costs (TDC)', y1Direct, y2Direct, true);
+
+                if (faBaseType === 'MTDC') {
+                    addRow('Less: Equipment', -y1Equip, -y2Equip, false, true, 'text-red-600');
+                    addRow('Less: Participant Support', -y1Participant, -y2Participant, false, true, 'text-red-600');
+                    addRow('Less: Subaward(s) > $25,000', -y1SubawardExcluded, -y2SubawardExcluded, false, true, 'text-red-600');
+                    addRow('Modified Total Direct Cost (MTDC) Base', y1FaBase, y2FaBase, true);
+                }
+
                 addRow(`F&A (Overhead) @ ${appState.projectDetails.faRate || 0}%`, y1Fa, y2Fa);
                 addRow('TOTAL PROJECT COSTS', y1Total, y2Total, true);
             };
@@ -1007,6 +1189,8 @@
                 renderLaborTable();
                 renderEquipmentTable();
                 renderOtherCostsTable();
+                renderParticipantTable();
+                renderSubawardTable();
                 renderTravelTable();
                 renderBudgetSummary();
             };
@@ -1075,7 +1259,7 @@
 
             // Setup specific NLP extractors
             setupNLP('laborParseBtn', 'laborInput', 'laborMessage',
-                `You extract labor budget details. Return JSON ONLY: {"year": "Year 1", "name": "string", "months": number, "effort": number(0-100), "salary": number}`,
+                `You extract labor budget details. Return JSON ONLY: {"year": "Year 1", "name": "string", "months": number, "effort": number(0-100), "salary": number, "fringeRate": number}`,
                 async (parsed) => { appState.laborBudgets.push(parsed); }
             );
 
@@ -1087,6 +1271,16 @@
             setupNLP('otherParseBtn', 'otherInput', 'otherMessage',
                 `You extract other direct costs (materials, publications, consultants). Return JSON ONLY: {"year": "Year 1", "type": "string", "description": "string", "numItems": number, "costPerItem": number}`,
                 async (parsed) => { appState.otherCostsBudgets.push(parsed); }
+            );
+
+            setupNLP('participantParseBtn', 'participantInput', 'participantMessage',
+                `You extract participant support costs. Return JSON ONLY: {"year": "Year 1", "category": "string", "supportType": "string", "numItems": number, "costPerItem": number}`,
+                async (parsed) => { appState.participantBudgets.push(parsed); }
+            );
+
+            setupNLP('subawardParseBtn', 'subawardInput', 'subawardMessage',
+                `You extract subaward costs. Return JSON ONLY: {"year": "Year 1", "institution": "string", "direct": number, "indirect": number}`,
+                async (parsed) => { appState.subawardBudgets.push(parsed); }
             );
 
             // Setup Travel parsing (special case for GSA lookup)
