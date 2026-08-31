@@ -25,12 +25,13 @@ Based on the research of available APIs, the following features can be implement
     - [x] This endpoint will take an organization identifier and query the relevant `sam.gov` API.
     - [x] Update the frontend to include the "Details" button and a modal or panel to display the fetched information.
 
-### Feature 3: Product Service Code (PSC) Explorer
+### Feature 3: Product Service Code (PSC) Explorer (Completed)
 - **Description:** Add a tool that allows users to search for PSC codes by keyword or to look up the meaning of a specific PSC code. This helps users find relevant opportunities.
 - **API Used:** `SAM.gov Product Service Codes (PSC) API`.
 - **Implementation:**
-    - Add a new backend endpoint (e.g., `/api/psc`).
-    - Add a new UI section for the PSC Explorer tool.
+    - [x] Add a new backend endpoint (e.g., `/api/psc`).
+    - [x] Add a new UI section for the PSC Explorer tool.
+    - [x] Verified with mock data and Playwright test.
 
 ---
 

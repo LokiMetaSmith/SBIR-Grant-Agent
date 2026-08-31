@@ -255,6 +255,59 @@ def draft_application():
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {e}"}), 500
 
+@app.route('/api/psc', methods=['POST'])
+def psc_search():
+    if os.getenv("TEST_MODE") == "true":
+        return jsonify({
+            "productServiceCodeList": [
+                {
+                    "pscCode": "R425",
+                    "pscName": "SUPPORT- PROFESSIONAL: ENGINEERING/TECHNICAL",
+                    "pscFullName": "Support- Professional: Engineering/Technical",
+                    "activeInd": "Y",
+                    "activeStartDate": "2015-10-01",
+                    "updatedDate": "2021-01-01"
+                },
+                {
+                    "pscCode": "1510",
+                    "pscName": "AIRCRAFT, FIXED WING",
+                    "pscFullName": "Aircraft, Fixed Wing",
+                    "activeInd": "Y",
+                    "activeStartDate": "1978-10-15",
+                    "updatedDate": "2017-07-09"
+                }
+            ]
+        })
+
+    sam_api_key = os.getenv("SAM_API_KEY")
+    if not sam_api_key:
+        return jsonify({"error": "SAM.gov API key is not configured on the server."}), 500
+
+    data = request.get_json()
+    query = data.get('q', '')
+    if not query:
+        return jsonify({"error": "A search term is required."}), 400
+
+    params = {
+        "api_key": sam_api_key,
+        "q": query,
+        "active": data.get('active', 'ALL'),
+        "limit": 50
+    }
+
+    # If searchBy is provided, add it to params
+    if data.get('searchBy'):
+        params['searchBy'] = data['searchBy']
+
+    try:
+        response = requests.get("https://api.sam.gov/prod/locationservices/v1/api/publicpscdetails", params=params, timeout=30)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to connect to the SAM.gov PSC API: {e}"}), 502
+    except Exception as e:
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
