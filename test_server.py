@@ -123,3 +123,88 @@ def test_draft_application(mock_post, client, monkeypatch):
 
     assert response.status_code == 200
     assert response.get_json()["draft"] == "Here is your application draft."
+
+import tempfile
+
+@patch('server.requests.get')
+@patch('server.requests.post')
+def test_match_opportunities_job(mock_post, mock_get, client, monkeypatch):
+    import server
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
+        json.dump({"researchProfile": {"capabilities": "AI", "topics": "ML"}, "matchedOpportunities": []}, tmp_file)
+        tmp_file_name = tmp_file.name
+
+    app.config['DATA_FILE'] = tmp_file_name
+
+    os.environ["SAM_API_KEY"] = "fake-key"
+
+    server.EXPERTS = {
+        "Mock Expert": {
+            "endpoint": "http://mock-llm.com/api",
+            "api_key": "mock-key",
+            "model_name": "mock-model"
+        }
+    }
+
+    mock_get_response = MagicMock()
+    mock_get_response.json.return_value = {
+        "opportunitiesData": [{
+            "title": "Test Grant Opportunity",
+            "noticeId": "12345"
+        }]
+    }
+    mock_get_response.raise_for_status.return_value = None
+    mock_get.return_value = mock_get_response
+
+    mock_post_response = MagicMock()
+    mock_post_response.json.return_value = {
+        "choices": [{
+            "message": {"content": '```json\n{"is_match": true, "justification": "Matches perfectly."}\n```'}
+        }]
+    }
+    mock_post_response.raise_for_status.return_value = None
+    mock_post.return_value = mock_post_response
+
+    server.match_opportunities_job()
+
+    with open(tmp_file_name, 'r') as f:
+        updated_data = json.load(f)
+
+    assert len(updated_data["matchedOpportunities"]) == 1
+    assert updated_data["matchedOpportunities"][0]["opportunity"]["title"] == "Test Grant Opportunity"
+    assert updated_data["matchedOpportunities"][0]["match_analysis"]["is_match"] == True
+
+    os.remove(tmp_file_name)
+
+def test_load_data_with_missing_keys(client):
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
+        json.dump({}, tmp_file)
+        tmp_file_name = tmp_file.name
+
+    app.config['DATA_FILE'] = tmp_file_name
+
+    response = client.get('/api/data')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["travelBudgets"] == []
+    assert data["reportMetrics"]["status"] == "On Track"
+
+    os.remove(tmp_file_name)
+
+def test_save_data(client):
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
+        tmp_file_name = tmp_file.name
+
+    app.config['DATA_FILE'] = tmp_file_name
+
+    response = client.post('/api/data', json={"test": "data"})
+    assert response.status_code == 200
+    assert response.get_json()["success"] == True
+
+    with open(tmp_file_name, 'r') as f:
+        saved_data = json.load(f)
+
+    assert saved_data == {"test": "data"}
+
+    os.remove(tmp_file_name)
