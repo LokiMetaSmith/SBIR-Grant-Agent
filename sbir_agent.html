@@ -62,9 +62,27 @@
                     <!-- Upcoming Deadlines -->
                     <section class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-2xl font-semibold mb-4 text-gray-600">Upcoming Deadlines</h2>
-                        <ul id="deadlinesList" class="list-disc list-inside space-y-2">
+                        <ul id="deadlinesList" class="space-y-2 mb-4">
                             <!-- Deadlines will be populated by JavaScript -->
                         </ul>
+
+                        <!-- Form to add new deadline -->
+                        <h3 class="text-xl font-semibold mb-2 text-gray-600 border-t pt-4">Add New Deadline</h3>
+                        <form id="addDeadlineForm" class="space-y-4">
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <div class="w-full md:w-2/3">
+                                    <label for="deadlineName" class="block text-sm font-medium text-gray-700">Deadline Name:</label>
+                                    <input type="text" id="deadlineName" class="w-full p-2 border rounded-md" placeholder="e.g., Q1 Progress Report" required>
+                                </div>
+                                <div class="w-full md:w-1/3">
+                                    <label for="deadlineDate" class="block text-sm font-medium text-gray-700">Date:</label>
+                                    <input type="date" id="deadlineDate" class="w-full p-2 border rounded-md" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                                Add Deadline
+                            </button>
+                        </form>
                     </section>
 
                     <!-- OTA Execution Milestones -->
@@ -812,6 +830,56 @@
             });
         }
 
+        function renderDeadlines() {
+            const deadlinesList = document.getElementById('deadlinesList');
+            deadlinesList.innerHTML = '';
+
+            if (!appState.deadlines || appState.deadlines.length === 0) {
+                deadlinesList.innerHTML = '<li class="text-gray-500 text-sm">No upcoming deadlines.</li>';
+                return;
+            }
+
+            // Sort deadlines by date
+            const sortedDeadlines = [...appState.deadlines].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            sortedDeadlines.forEach((deadline, index) => {
+                // Find original index in appState.deadlines
+                const originalIndex = appState.deadlines.findIndex(d => d.name === deadline.name && d.date === deadline.date);
+
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center p-3 border rounded-md bg-gray-50';
+
+                // Highlight overdue or soon deadlines
+                const today = new Date();
+                const dDate = new Date(deadline.date);
+                const diffTime = dDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                let dateColor = 'text-gray-600';
+                if (diffDays < 0) dateColor = 'text-red-600 font-bold'; // Overdue
+                else if (diffDays <= 7) dateColor = 'text-orange-500 font-bold'; // Next 7 days
+
+                li.innerHTML = `
+                    <div>
+                        <span class="font-semibold text-gray-800">${deadline.name}</span>
+                        <span class="ml-2 text-sm ${dateColor}">(Due: ${deadline.date})</span>
+                    </div>
+                    <button onclick="deleteDeadline(${originalIndex})" class="text-red-500 hover:text-red-700 text-xs px-2 py-1 bg-red-50 rounded hover:bg-red-100 transition-colors">Delete</button>
+                `;
+                deadlinesList.appendChild(li);
+            });
+        }
+
+        async function deleteDeadline(index) {
+            if (confirm("Are you sure you want to delete this deadline?")) {
+                if (appState.deadlines) {
+                    appState.deadlines.splice(index, 1);
+                    renderDeadlines();
+                    await saveApplicationData();
+                }
+            }
+        }
+
         function setupDashboard(budget, deadlines) {
             const budgetCtx = document.getElementById('budgetChart').getContext('2d');
             new Chart(budgetCtx, {
@@ -829,12 +897,23 @@
                 options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: `Total Budget: $${budget.spent + budget.remaining}` } } }
             });
 
-            const deadlinesList = document.getElementById('deadlinesList');
-            deadlinesList.innerHTML = '';
-            (deadlines || []).forEach(deadline => {
-                const li = document.createElement('li');
-                li.textContent = `${deadline.name} (Due: ${deadline.date})`;
-                deadlinesList.appendChild(li);
+            renderDeadlines();
+
+            const addDeadlineForm = document.getElementById('addDeadlineForm');
+            addDeadlineForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const newDeadline = {
+                    name: document.getElementById('deadlineName').value,
+                    date: document.getElementById('deadlineDate').value
+                };
+
+                appState.deadlines = appState.deadlines || [];
+                appState.deadlines.push(newDeadline);
+
+                renderDeadlines();
+                addDeadlineForm.reset();
+                await saveApplicationData();
             });
         }
 

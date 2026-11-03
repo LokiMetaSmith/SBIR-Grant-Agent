@@ -3,8 +3,9 @@ import json
 import re
 import requests
 import atexit
+import argparse
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, current_app
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -12,8 +13,11 @@ from apscheduler.schedulers.background import BackgroundScheduler
 load_dotenv()
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-DATA_FILE = os.getenv('DATA_FILE', 'data.json')
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
+
+# Set default configuration
+app.config['DATA_FILE'] = os.getenv('DATA_FILE', 'data.json')
+app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'uploads')
+
 EXPERTS = {}
 
 # --- Automated Matching Job ---
@@ -23,10 +27,12 @@ def match_opportunities_job():
     with app.app_context():
         print(f"[{datetime.now()}] Running automated opportunity matching job...")
 
-        if not os.path.exists(DATA_FILE):
+        data_file = current_app.config['DATA_FILE']
+
+        if not os.path.exists(data_file):
             print("Data file not found. Skipping job.")
             return
-        with open(DATA_FILE, 'r') as f:
+        with open(data_file, 'r') as f:
             app_data = json.load(f)
 
         profile = app_data.get("researchProfile")
@@ -103,7 +109,7 @@ def match_opportunities_job():
                 continue
 
         app_data["matchedOpportunities"] = matched_opportunities
-        with open(DATA_FILE, 'w') as f:
+        with open(data_file, 'w') as f:
             json.dump(app_data, f, indent=4)
         print("Automated matching job finished.")
 
@@ -257,6 +263,7 @@ def draft_application():
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
+    upload_folder = current_app.config['UPLOAD_FOLDER']
     if 'file' not in request.files:
         return jsonify({"error": "No file part."}), 400
     file = request.files['file']
@@ -264,18 +271,19 @@ def upload_file():
         return jsonify({"error": "No selected file."}), 400
     if file:
         filename = secure_filename(file.filename)
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
-        return jsonify({"success": True, "filename": filename, "path": f"/{UPLOAD_FOLDER}/{filename}"}), 201
+        file.save(os.path.join(upload_folder, filename))
+        return jsonify({"success": True, "filename": filename, "path": f"/{upload_folder}/{filename}"}), 201
 
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/api/data', methods=['GET'])
 def load_data():
     try:
-        if os.path.exists(DATA_FILE):
-            with open(DATA_FILE, 'r') as f:
+        data_file = current_app.config['DATA_FILE']
+        if os.path.exists(data_file):
+            with open(data_file, 'r') as f:
                 data = json.load(f)
                 # Ensure new budget arrays exist in existing data
                 if "travelBudgets" not in data:
@@ -374,7 +382,8 @@ def get_gsa_perdiem():
 @app.route('/api/data', methods=['POST'])
 def save_data():
     try:
-        with open(DATA_FILE, 'w') as f:
+        data_file = current_app.config['DATA_FILE']
+        with open(data_file, 'w') as f:
             json.dump(request.get_json(), f, indent=4)
         return jsonify({"success": True})
     except Exception as e:
@@ -400,7 +409,17 @@ def chat_handler():
         return jsonify({"error": "An unexpected error occurred."}), 500
 
 if __name__ == '__main__':
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    parser = argparse.ArgumentParser(description="Grant Management Dashboard Server")
+    parser.add_argument('--host', type=str, default='0.0.0.0', help="Host to run the server on")
+    parser.add_argument('--port', type=int, default=5000, help="Port to run the server on")
+    parser.add_argument('--data-file', type=str, default=app.config['DATA_FILE'], help="Path to data JSON file")
+    parser.add_argument('--upload-folder', type=str, default=app.config['UPLOAD_FOLDER'], help="Path to upload folder")
+    args = parser.parse_args()
+
+    app.config['DATA_FILE'] = args.data_file
+    app.config['UPLOAD_FOLDER'] = args.upload_folder
+
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     load_experts_from_env()
 
     scheduler = BackgroundScheduler()
@@ -409,4 +428,4 @@ if __name__ == '__main__':
     print("Scheduler started. Will run job in 5 seconds for testing, then daily.")
     atexit.register(lambda: scheduler.shutdown())
 
-    app.run(host='0.0.0.0', debug=True, port=5000, use_reloader=False)
+    app.run(host=args.host, debug=True, port=args.port, use_reloader=False)
