@@ -208,3 +208,41 @@ def test_save_data(client):
     assert saved_data == {"test": "data"}
 
     os.remove(tmp_file_name)
+
+def test_search_psc_missing_keywords(client):
+    os.environ["SAM_API_KEY"] = "fake-key"
+    response = client.post('/api/psc', json={})
+    assert response.status_code == 400
+    assert response.get_json()['error'] == "Keywords are required to search PSCs."
+
+@patch('server.requests.get')
+def test_search_psc_success(mock_get, client):
+    os.environ["SAM_API_KEY"] = "fake-key"
+    mock_response = MagicMock()
+    mock_response.json.return_value = {
+        "pscData": [{
+            "pscCode": "R425",
+            "pscName": "Engineering and Technical Services",
+            "description": "Engineering services."
+        }]
+    }
+    mock_response.raise_for_status.return_value = None
+    mock_get.return_value = mock_response
+
+    response = client.post('/api/psc', json={'keywords': 'Engineering'})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data) == 1
+    assert data[0]["pscCode"] == "R425"
+
+@patch('server.requests.get')
+def test_search_psc_not_found(mock_get, client):
+    os.environ["SAM_API_KEY"] = "fake-key"
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"pscData": []}
+    mock_response.raise_for_status.return_value = None
+    mock_get.return_value = mock_response
+
+    response = client.post('/api/psc', json={'keywords': 'Unknown'})
+    assert response.status_code == 200
+    assert len(response.get_json()) == 0

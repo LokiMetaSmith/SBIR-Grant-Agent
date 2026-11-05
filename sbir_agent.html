@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grant Management Dashboard</title>
+    <title>Non-Profit Grant Agent</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -38,7 +38,7 @@
 
     <div class="container mx-auto p-8 flex-grow">
         <header class="mb-8">
-            <h1 class="text-4xl font-bold text-center text-gray-700">Grant Management Dashboard</h1>
+            <h1 class="text-4xl font-bold text-center text-gray-700">Non-Profit Grant Agent</h1>
         </header>
 
         <main class="space-y-8">
@@ -140,11 +140,14 @@
                     <section class="bg-white rounded-lg shadow-md">
                         <div class="border-b border-gray-200">
                             <nav class="-mb-px flex" aria-label="Tabs">
-                                <button id="tab-search" class="tab-btn active w-1/2 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                                <button id="tab-search" class="tab-btn active w-1/3 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
                                     Opportunity Search
                                 </button>
-                                <button id="tab-profile" class="tab-btn w-1/2 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                                <button id="tab-profile" class="tab-btn w-1/3 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
                                     Research Profile
+                                </button>
+                                <button id="tab-psc" class="tab-btn w-1/3 py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                                    PSC Explorer
                                 </button>
                             </nav>
                         </div>
@@ -204,6 +207,24 @@
                                     Add Opportunity
                                 </button>
                             </form>
+                        </div>
+
+                        <!-- PSC Explorer Tab Content -->
+                        <div id="content-psc" class="p-6 hidden">
+                            <h2 class="text-2xl font-semibold mb-4 text-gray-600">Product Service Code (PSC) Explorer</h2>
+                            <p class="text-sm text-gray-500 mb-4">Search for PSC codes by keyword or look up a specific code to better target opportunities.</p>
+                            <form id="pscSearchForm" class="space-y-4">
+                                <div>
+                                    <label for="pscKeywords" class="block text-sm font-medium text-gray-700">Keyword or Code:</label>
+                                    <input type="text" id="pscKeywords" placeholder="e.g., Software or R425" class="w-full p-2 border rounded-md" required>
+                                </div>
+                                <button type="submit" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-lg transform hover:-translate-y-px">
+                                    Search PSC
+                                </button>
+                            </form>
+                            <div id="pscResults" class="mt-6">
+                                <!-- PSC results will be populated here -->
+                            </div>
                         </div>
 
                         <!-- Profile Tab Content -->
@@ -2080,11 +2101,13 @@ Make reasonable guesses. If unknown, use defaults (e.g. 0 for costs, 1 for count
         function setupTabs() {
             const tabButtons = {
                 search: document.getElementById('tab-search'),
-                profile: document.getElementById('tab-profile')
+                profile: document.getElementById('tab-profile'),
+                psc: document.getElementById('tab-psc')
             };
             const tabContents = {
                 search: document.getElementById('content-search'),
-                profile: document.getElementById('content-profile')
+                profile: document.getElementById('content-profile'),
+                psc: document.getElementById('content-psc')
             };
 
             const switchTab = (tabName) => {
@@ -2099,7 +2122,51 @@ Make reasonable guesses. If unknown, use defaults (e.g. 0 for costs, 1 for count
 
             tabButtons.search.addEventListener('click', () => switchTab('search'));
             tabButtons.profile.addEventListener('click', () => switchTab('profile'));
+            tabButtons.psc.addEventListener('click', () => switchTab('psc'));
         }
+
+        // PSC Explorer Logic
+        document.getElementById('pscSearchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const keywords = document.getElementById('pscKeywords').value;
+            const resultsDiv = document.getElementById('pscResults');
+
+            resultsDiv.innerHTML = '<p class="text-gray-500 italic">Searching PSC codes...</p>';
+
+            try {
+                const response = await fetch('/api/psc', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keywords: keywords })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = '<p class="text-gray-500 italic">No PSC codes found matching your search.</p>';
+                        return;
+                    }
+
+                    let html = '<div class="space-y-4">';
+                    data.forEach(psc => {
+                        html += `
+                            <div class="p-4 border rounded-md shadow-sm bg-gray-50">
+                                <h3 class="font-bold text-lg text-indigo-700">${psc.pscCode || 'N/A'} - ${psc.pscName || 'Unknown'}</h3>
+                                <p class="text-sm text-gray-700 mt-2">${psc.description || 'No description available.'}</p>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    const error = await response.json();
+                    resultsDiv.innerHTML = `<p class="text-red-500">Error: ${error.error || 'Failed to search PSCs.'}</p>`;
+                }
+            } catch (err) {
+                console.error('PSC search error:', err);
+                resultsDiv.innerHTML = '<p class="text-red-500">A network error occurred.</p>';
+            }
+        });
 
         // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', async () => {
