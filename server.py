@@ -187,6 +187,36 @@ def organization_details():
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred."}), 500
 
+@app.route('/api/psc', methods=['POST'])
+def search_psc():
+    sam_api_key = os.getenv("SAM_API_KEY")
+    if not sam_api_key:
+        return jsonify({"error": "SAM.gov API key is not configured on the server."}), 500
+
+    data = request.get_json()
+    keywords = data.get('keywords', '')
+
+    if not keywords:
+         return jsonify({"error": "Keywords are required to search PSCs."}), 400
+
+    params = {
+        "api_key": sam_api_key,
+        "pscName": keywords,
+        "limit": 10
+    }
+
+    try:
+        # Note: Depending on SAM API, the endpoint might be slightly different.
+        # But we will use the common structure.
+        response = requests.get("https://api.sam.gov/prod/pscs/v1/search", params=params, timeout=30)
+        response.raise_for_status()
+        psc_list = response.json().get("pscData", [])
+        return jsonify(psc_list)
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to connect to the SAM.gov PSC API: {e}"}), 502
+    except Exception as e:
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
 @app.route('/api/search_opportunities', methods=['POST'])
 def search_opportunities():
     sam_api_key = os.getenv("SAM_API_KEY")
