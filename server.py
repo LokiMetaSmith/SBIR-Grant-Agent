@@ -291,18 +291,27 @@ def draft_application():
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {e}"}), 500
 
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'docx', 'csv'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     upload_folder = current_app.config['UPLOAD_FOLDER']
+    os.makedirs(upload_folder, exist_ok=True)
     if 'file' not in request.files:
         return jsonify({"error": "No file part."}), 400
     file = request.files['file']
     if file.filename == '':
         return jsonify({"error": "No selected file."}), 400
-    if file:
+    if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         file.save(os.path.join(upload_folder, filename))
         return jsonify({"success": True, "filename": filename, "path": f"/{upload_folder}/{filename}"}), 201
+    else:
+        return jsonify({"error": "File type not allowed."}), 400
 
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
